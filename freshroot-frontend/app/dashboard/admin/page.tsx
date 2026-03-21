@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { MOCK_CUSTOMERS, MOCK_ORDERS, MOCK_EXPENSES } from "@/utils/mock-data";
 import Card, { CardHeader, CardTitle } from "@/components/Card";
 import Badge from "@/components/Badge";
+import DataTable from "@/components/DataTable";
+import type { Column } from "@/components/DataTable";
+import type { Customer, Order, Expense } from "@/utils/types";
 
 export const metadata: Metadata = {
 	title: "Admin Dashboard | Freshroot Farms",
@@ -13,6 +16,109 @@ const orderStatusColor = {
 	delivered: "green" as const,
 	cancelled: "red" as const,
 };
+
+/* ── Column definitions ─────────────────────────────────────────── */
+const customerColumns: Column<Customer>[] = [
+	{
+		header: "Name",
+		accessorKey: "name",
+		cell: (row) => (
+			<span className="font-medium text-gray-900">{row.name}</span>
+		),
+	},
+	{
+		header: "Email",
+		accessorKey: "email",
+		cell: (row) => <span className="text-gray-600">{row.email}</span>,
+	},
+	{
+		header: "Plan",
+		accessorKey: "plan",
+		cell: (row) => <span className="text-gray-600">{row.plan}</span>,
+	},
+	{
+		header: "Joined",
+		accessorKey: "joinedDate",
+		cell: (row) => <span className="text-gray-600">{row.joinedDate}</span>,
+	},
+	{
+		header: "Status",
+		accessorKey: "status",
+		cell: (row) => (
+			<Badge variant={row.status === "active" ? "green" : "gray"}>
+				{row.status}
+			</Badge>
+		),
+	},
+];
+
+const orderColumns: Column<Order>[] = [
+	{
+		header: "Order",
+		accessorKey: "id",
+		cell: (row) => <span className="font-medium text-gray-900">{row.id}</span>,
+	},
+	{
+		header: "Customer",
+		accessorKey: "customerName",
+		cell: (row) => <span className="text-gray-600">{row.customerName}</span>,
+	},
+	{
+		header: "Items",
+		accessorKey: "items",
+		cell: (row) => (
+			<span className="text-gray-600">{row.items.join(", ")}</span>
+		),
+	},
+	{
+		header: "Total",
+		accessorKey: "total",
+		cell: (row) => (
+			<span className="text-gray-900">
+				₹{row.total.toLocaleString("en-IN")}
+			</span>
+		),
+	},
+	{
+		header: "Date",
+		accessorKey: "date",
+		cell: (row) => <span className="text-gray-600">{row.date}</span>,
+	},
+	{
+		header: "Status",
+		accessorKey: "status",
+		cell: (row) => (
+			<Badge variant={orderStatusColor[row.status]}>{row.status}</Badge>
+		),
+	},
+];
+
+const expenseColumns: Column<Expense>[] = [
+	{
+		header: "Category",
+		accessorKey: "category",
+		cell: (row) => <Badge variant="gray">{row.category}</Badge>,
+	},
+	{
+		header: "Description",
+		accessorKey: "description",
+		cell: (row) => <span className="text-gray-600">{row.description}</span>,
+	},
+	{
+		header: "Amount",
+		accessorKey: "amount",
+		cell: (row) => (
+			<span className="font-medium text-gray-900">
+				₹{row.amount.toLocaleString("en-IN")}
+			</span>
+		),
+	},
+	{
+		header: "Date",
+		accessorKey: "date",
+		cell: (row) => <span className="text-gray-600">{row.date}</span>,
+	},
+];
 
 export default function AdminDashboard() {
 	const totalRevenue = MOCK_ORDERS.reduce((s, o) => s + o.total, 0);
@@ -69,36 +175,11 @@ export default function AdminDashboard() {
 					<CardHeader>
 						<CardTitle>Customers</CardTitle>
 					</CardHeader>
-					<div className="overflow-x-auto">
-						<table className="w-full text-left text-sm">
-							<thead>
-								<tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-									<th className="pb-3 pr-4">Name</th>
-									<th className="pb-3 pr-4">Email</th>
-									<th className="pb-3 pr-4">Plan</th>
-									<th className="pb-3 pr-4">Joined</th>
-									<th className="pb-3">Status</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-gray-100">
-								{MOCK_CUSTOMERS.map((c) => (
-									<tr key={c.id}>
-										<td className="py-3 pr-4 font-medium text-gray-900">
-											{c.name}
-										</td>
-										<td className="py-3 pr-4 text-gray-600">{c.email}</td>
-										<td className="py-3 pr-4 text-gray-600">{c.plan}</td>
-										<td className="py-3 pr-4 text-gray-600">{c.joinedDate}</td>
-										<td className="py-3">
-											<Badge variant={c.status === "active" ? "green" : "gray"}>
-												{c.status}
-											</Badge>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+					<DataTable
+						columns={customerColumns}
+						data={MOCK_CUSTOMERS}
+						keyExtractor={(c) => c.id}
+					/>
 				</Card>
 			</section>
 
@@ -108,44 +189,11 @@ export default function AdminDashboard() {
 					<CardHeader>
 						<CardTitle>Recent Orders</CardTitle>
 					</CardHeader>
-					<div className="overflow-x-auto">
-						<table className="w-full text-left text-sm">
-							<thead>
-								<tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-									<th className="pb-3 pr-4">Order</th>
-									<th className="pb-3 pr-4">Customer</th>
-									<th className="pb-3 pr-4">Items</th>
-									<th className="pb-3 pr-4">Total</th>
-									<th className="pb-3 pr-4">Date</th>
-									<th className="pb-3">Status</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-gray-100">
-								{MOCK_ORDERS.map((o) => (
-									<tr key={o.id}>
-										<td className="py-3 pr-4 font-medium text-gray-900">
-											{o.id}
-										</td>
-										<td className="py-3 pr-4 text-gray-600">
-											{o.customerName}
-										</td>
-										<td className="py-3 pr-4 text-gray-600">
-											{o.items.join(", ")}
-										</td>
-										<td className="py-3 pr-4 text-gray-900">
-											₹{o.total.toLocaleString("en-IN")}
-										</td>
-										<td className="py-3 pr-4 text-gray-600">{o.date}</td>
-										<td className="py-3">
-											<Badge variant={orderStatusColor[o.status]}>
-												{o.status}
-											</Badge>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+					<DataTable
+						columns={orderColumns}
+						data={MOCK_ORDERS}
+						keyExtractor={(o) => o.id}
+					/>
 				</Card>
 			</section>
 
@@ -155,46 +203,25 @@ export default function AdminDashboard() {
 					<CardHeader>
 						<CardTitle>Expense Tracker</CardTitle>
 					</CardHeader>
-					<div className="overflow-x-auto">
-						<table className="w-full text-left text-sm">
-							<thead>
-								<tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-									<th className="pb-3 pr-4">Category</th>
-									<th className="pb-3 pr-4">Description</th>
-									<th className="pb-3 pr-4">Amount</th>
-									<th className="pb-3">Date</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-gray-100">
-								{MOCK_EXPENSES.map((e) => (
-									<tr key={e.id}>
-										<td className="py-3 pr-4">
-											<Badge variant="gray">{e.category}</Badge>
-										</td>
-										<td className="py-3 pr-4 text-gray-600">{e.description}</td>
-										<td className="py-3 pr-4 font-medium text-gray-900">
-											₹{e.amount.toLocaleString("en-IN")}
-										</td>
-										<td className="py-3 text-gray-600">{e.date}</td>
-									</tr>
-								))}
-							</tbody>
-							<tfoot>
-								<tr className="border-t border-gray-200">
-									<td
-										colSpan={2}
-										className="pt-3 text-right font-semibold text-gray-700"
-									>
-										Total
-									</td>
-									<td className="pt-3 font-bold text-gray-900">
-										₹{totalExpenses.toLocaleString("en-IN")}
-									</td>
-									<td />
-								</tr>
-							</tfoot>
-						</table>
-					</div>
+					<DataTable
+						columns={expenseColumns}
+						data={MOCK_EXPENSES}
+						keyExtractor={(e) => e.id}
+						footer={
+							<tr className="border-t border-gray-200">
+								<td
+									colSpan={2}
+									className="pt-3 text-right font-semibold text-gray-700"
+								>
+									Total
+								</td>
+								<td className="pt-3 font-bold text-gray-900">
+									₹{totalExpenses.toLocaleString("en-IN")}
+								</td>
+								<td />
+							</tr>
+						}
+					/>
 				</Card>
 			</section>
 		</div>

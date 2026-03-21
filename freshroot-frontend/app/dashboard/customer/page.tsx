@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { MOCK_SUBSCRIPTIONS, MOCK_DELIVERIES } from "@/utils/mock-data";
 import Card, { CardHeader, CardTitle, CardContent } from "@/components/Card";
 import Badge from "@/components/Badge";
+import DataTable from "@/components/DataTable";
+import type { Column } from "@/components/DataTable";
+import type { Delivery } from "@/utils/types";
 
 export const metadata: Metadata = {
 	title: "Customer Dashboard | Freshroot Farms",
@@ -19,6 +22,28 @@ const deliveryColor = {
 	scheduled: "amber" as const,
 	cancelled: "red" as const,
 };
+
+const deliveryColumns: Column<Delivery>[] = [
+	{
+		header: "Date",
+		accessorKey: "date",
+		cell: (row) => <span className="text-gray-900">{row.date}</span>,
+	},
+	{
+		header: "Items",
+		accessorKey: "items",
+		cell: (row) => (
+			<span className="text-gray-600">{row.items.join(", ")}</span>
+		),
+	},
+	{
+		header: "Status",
+		accessorKey: "status",
+		cell: (row) => (
+			<Badge variant={deliveryColor[row.status]}>{row.status}</Badge>
+		),
+	},
+];
 
 export default function CustomerDashboard() {
 	return (
@@ -99,32 +124,12 @@ export default function CustomerDashboard() {
 					Delivery Status
 				</h2>
 				<Card>
-					<div className="overflow-x-auto">
-						<table className="w-full text-left text-sm">
-							<thead>
-								<tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-									<th className="pb-3 pr-4">Date</th>
-									<th className="pb-3 pr-4">Items</th>
-									<th className="pb-3">Status</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-gray-100">
-								{MOCK_DELIVERIES.map((d) => (
-									<tr key={d.id}>
-										<td className="py-3 pr-4 text-gray-900">{d.date}</td>
-										<td className="py-3 pr-4 text-gray-600">
-											{d.items.join(", ")}
-										</td>
-										<td className="py-3">
-											<Badge variant={deliveryColor[d.status]}>
-												{d.status}
-											</Badge>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+					<DataTable
+						columns={deliveryColumns}
+						data={MOCK_DELIVERIES}
+						keyExtractor={(d) => d.id}
+						emptyMessage="No deliveries yet."
+					/>
 				</Card>
 			</section>
 		</div>
