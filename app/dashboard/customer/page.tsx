@@ -1,51 +1,45 @@
-import type { Metadata } from "next";
-import { MOCK_SUBSCRIPTIONS, MOCK_DELIVERIES } from "@/utils/mock-data";
-import Card, { CardHeader, CardTitle, CardContent } from "@/components/Card";
-import Badge from "@/components/Badge";
-import DataTable from "@/components/DataTable";
-import type { Column } from "@/components/DataTable";
-import type { Delivery } from "@/utils/types";
+"use client";
 
-export const metadata: Metadata = {
-	title: "Customer Dashboard | Freshroot Farms",
-};
+import { useCustomerDashboard } from "@/hooks/useDashboard";
+import SummaryCards from "@/components/SummaryCards";
+import SubscriptionCard from "@/components/SubscriptionCard";
+import DeliveryTable from "@/components/DeliveryTable";
+import { DashboardSkeleton } from "@/components/Skeleton";
 
-const statusColor = {
-	active: "green" as const,
-	paused: "amber" as const,
-	cancelled: "red" as const,
-};
-
-const deliveryColor = {
-	delivered: "green" as const,
-	"in-transit": "blue" as const,
-	scheduled: "amber" as const,
-	cancelled: "red" as const,
-};
-
-const deliveryColumns: Column<Delivery>[] = [
-	{
-		header: "Date",
-		accessorKey: "date",
-		cell: (row) => <span className="text-gray-900">{row.date}</span>,
-	},
-	{
-		header: "Items",
-		accessorKey: "items",
-		cell: (row) => (
-			<span className="text-gray-600">{row.items.join(", ")}</span>
-		),
-	},
-	{
-		header: "Status",
-		accessorKey: "status",
-		cell: (row) => (
-			<Badge variant={deliveryColor[row.status]}>{row.status}</Badge>
-		),
-	},
-];
+// TODO: Replace with real customer ID from auth context
+const CUSTOMER_ID = "1";
 
 export default function CustomerDashboard() {
+	const { data, isLoading, isError, error } = useCustomerDashboard(CUSTOMER_ID);
+
+	if (isLoading) return <DashboardSkeleton />;
+
+	if (isError) {
+		return (
+			<div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+				<span className="text-4xl">⚠️</span>
+				<p className="text-lg font-medium text-gray-900">
+					Something went wrong
+				</p>
+				<p className="text-sm text-gray-500">
+					{error instanceof Error ? error.message : "Unable to load dashboard."}
+				</p>
+			</div>
+		);
+	}
+
+	if (!data) {
+		return (
+			<div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+				<span className="text-4xl">📭</span>
+				<p className="text-lg font-medium text-gray-900">No data available</p>
+				<p className="text-sm text-gray-500">
+					We couldn&apos;t find any dashboard data for your account.
+				</p>
+			</div>
+		);
+	}
+
 	return (
 		<div className="space-y-10">
 			<div>
@@ -56,66 +50,31 @@ export default function CustomerDashboard() {
 			</div>
 
 			{/* ── Quick Stats ─────────────────────────────────────────── */}
-			<div className="grid gap-4 sm:grid-cols-3">
-				{[
-					{
-						label: "Active Plans",
-						value: MOCK_SUBSCRIPTIONS.filter((s) => s.status === "active")
-							.length,
-						icon: "📋",
-					},
-					{
-						label: "Upcoming Deliveries",
-						value: MOCK_DELIVERIES.filter(
-							(d) => d.status !== "delivered" && d.status !== "cancelled",
-						).length,
-						icon: "🚚",
-					},
-					{
-						label: "Items Delivered",
-						value: MOCK_DELIVERIES.filter(
-							(d) => d.status === "delivered",
-						).flatMap((d) => d.items).length,
-						icon: "✅",
-					},
-				].map((stat) => (
-					<Card key={stat.label}>
-						<div className="flex items-center gap-4">
-							<span className="text-3xl">{stat.icon}</span>
-							<div>
-								<p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-								<p className="text-sm text-gray-500">{stat.label}</p>
-							</div>
-						</div>
-					</Card>
-				))}
-			</div>
+			<SummaryCards
+				activePlans={data.activePlans}
+				upcomingDeliveries={data.upcomingDeliveries}
+				itemsDelivered={data.itemsDelivered}
+			/>
 
 			{/* ── Subscriptions ───────────────────────────────────────── */}
 			<section id="subscriptions">
 				<h2 className="mb-4 text-xl font-bold text-gray-900">
 					My Subscriptions
 				</h2>
-				<div className="grid gap-4 sm:grid-cols-2">
-					{MOCK_SUBSCRIPTIONS.map((sub) => (
-						<Card key={sub.id}>
-							<CardHeader>
-								<div className="flex items-center justify-between">
-									<CardTitle>{sub.plan}</CardTitle>
-									<Badge variant={statusColor[sub.status]}>{sub.status}</Badge>
-								</div>
-							</CardHeader>
-							<CardContent>
-								<dl className="grid grid-cols-2 gap-y-2 text-sm">
-									<dt className="text-gray-500">Started</dt>
-									<dd className="text-gray-900">{sub.startDate}</dd>
-									<dt className="text-gray-500">Next Delivery</dt>
-									<dd className="text-gray-900">{sub.nextDelivery}</dd>
-								</dl>
-							</CardContent>
-						</Card>
-					))}
-				</div>
+				{data.subscriptions.length === 0 ? (
+					<p className="text-sm text-gray-500">
+						You have no subscriptions yet.
+					</p>
+				) : (
+					<div className="grid gap-4 sm:grid-cols-2">
+						{data.subscriptions.map((sub) => (
+							<SubscriptionCard
+								key={`${sub.name}-${sub.startDate}`}
+								subscription={sub}
+							/>
+						))}
+					</div>
+				)}
 			</section>
 
 			{/* ── Deliveries ──────────────────────────────────────────── */}
@@ -123,14 +82,7 @@ export default function CustomerDashboard() {
 				<h2 className="mb-4 text-xl font-bold text-gray-900">
 					Delivery Status
 				</h2>
-				<Card>
-					<DataTable
-						columns={deliveryColumns}
-						data={MOCK_DELIVERIES}
-						keyExtractor={(d) => d.id}
-						emptyMessage="No deliveries yet."
-					/>
-				</Card>
+				<DeliveryTable deliveries={data.deliveries} />
 			</section>
 		</div>
 	);

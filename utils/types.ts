@@ -70,3 +70,25 @@ export interface Expense {
 	amount: number;
 	date: string;
 }
+
+// ── Customer Dashboard API Response ────────────────────────────────
+export interface DashboardSubscription {
+	name: string;
+	status: "active" | "paused" | "cancelled";
+	startDate: string;
+	nextDelivery: string;
+}
+
+export interface DashboardDelivery {
+	date: string;
+	items: string[];
+	status: "delivered" | "in-transit" | "scheduled" | "cancelled";
+}
+
+export interface CustomerDashboardResponse {
+	activePlans: number;
+	upcomingDeliveries: number;
+	itemsDelivered: number;
+	subscriptions: DashboardSubscription[];
+	deliveries: DashboardDelivery[];
+}
