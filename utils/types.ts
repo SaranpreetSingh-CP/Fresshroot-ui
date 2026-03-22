@@ -1,22 +1,35 @@
 // ── Subscription Plans (STF) ───────────────────────────────────────
+export interface PlanPricing {
+	monthly: number;
+	quarterly: number;
+	halfYearly: number;
+	yearly: number;
+}
+
 export interface SubscriptionPlan {
 	id: string;
 	name: string;
-	price: number;
-	duration: string;
+	subtitle: string;
+	pricing: PlanPricing;
 	features: string[];
 	popular?: boolean;
 }
 
 // ── Kitchen Garden ─────────────────────────────────────────────────
+export interface GardenTier {
+	label: string;
+	setupCost?: number;
+	production: string;
+	weekdayPrice: number;
+	weekendPrice?: number;
+}
+
 export interface GardenPackage {
 	id: string;
 	name: string;
-	description: string;
-	price: number;
-	area: string;
-	plants: string[];
-	image?: string;
+	duration: string;
+	inclusions: string;
+	tiers: GardenTier[];
 }
 
 export interface BookingFormData {

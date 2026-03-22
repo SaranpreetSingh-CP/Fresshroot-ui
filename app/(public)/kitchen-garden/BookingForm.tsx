@@ -14,7 +14,7 @@ export default function BookingForm() {
 
 	const packageOptions = GARDEN_PACKAGES.map((p) => ({
 		value: p.id,
-		label: `${p.name} — ₹${p.price.toLocaleString("en-IN")}`,
+		label: p.name,
 	}));
 
 	async function handleSubmit(e: React.FormEvent) {

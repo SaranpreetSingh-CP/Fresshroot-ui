@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_NAME, SITE_DESCRIPTION } from "@/utils/constants";
 import { TESTIMONIALS } from "@/utils/mock-data";
+import TestimonialCarousel from "@/components/TestimonialCarousel";
 
 export const metadata: Metadata = {
 	title: `${SITE_NAME} — Farm Fresh, From Soil to Fork`,
@@ -157,21 +158,8 @@ export default function HomePage() {
 					<h2 className="text-center text-3xl font-bold text-gray-900">
 						What Our Customers Say
 					</h2>
-					<div className="mt-12 grid gap-8 sm:grid-cols-3">
-						{TESTIMONIALS.map((t) => (
-							<blockquote
-								key={t.id}
-								className="rounded-2xl border border-gray-100 bg-gray-50 p-8"
-							>
-								<p className="text-sm leading-relaxed text-gray-600">
-									&ldquo;{t.quote}&rdquo;
-								</p>
-								<footer className="mt-6">
-									<p className="font-semibold text-gray-900">{t.name}</p>
-									<p className="text-xs text-gray-500">{t.role}</p>
-								</footer>
-							</blockquote>
-						))}
+					<div className="mt-12">
+						<TestimonialCarousel testimonials={TESTIMONIALS} />
 					</div>
 				</div>
 			</section>

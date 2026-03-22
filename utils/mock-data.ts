@@ -11,43 +11,55 @@ import type {
 // ── STF Subscription Plans ─────────────────────────────────────────
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 	{
-		id: "plan-basic",
-		name: "Starter Basket",
-		price: 999,
-		duration: "month",
+		id: "plan-1pax",
+		name: "1 Pax",
+		subtitle: "3 Kg / Delivery",
+		pricing: {
+			monthly: 8000,
+			quarterly: 15000,
+			halfYearly: 28000,
+			yearly: 50000,
+		},
 		features: [
-			"5 kg seasonal vegetables",
-			"Weekly delivery",
-			"Basic recipe cards",
-			"Email support",
+			"3 Kg fresh vegetables per delivery",
+			"2 deliveries per week",
+			"Wednesdays & Saturdays",
+			"Ideal for individuals",
 		],
 	},
 	{
-		id: "plan-standard",
-		name: "Family Harvest",
-		price: 1999,
-		duration: "month",
+		id: "plan-2-3pax",
+		name: "2–3 Pax",
+		subtitle: "5–6 Kg / Delivery",
 		popular: true,
+		pricing: {
+			monthly: 16000,
+			quarterly: 30000,
+			halfYearly: 56000,
+			yearly: 100000,
+		},
 		features: [
-			"12 kg seasonal vegetables",
-			"2 kg fruits",
-			"Twice-weekly delivery",
-			"Recipe cards & meal plans",
-			"Priority support",
+			"5–6 Kg fresh vegetables per delivery",
+			"2 deliveries per week",
+			"Wednesdays & Saturdays",
+			"Perfect for small families",
 		],
 	},
 	{
-		id: "plan-premium",
-		name: "Farm Feast",
-		price: 3499,
-		duration: "month",
+		id: "plan-4-5pax",
+		name: "4–5 Pax",
+		subtitle: "10–12 Kg / Delivery",
+		pricing: {
+			monthly: 32000,
+			quarterly: 60000,
+			halfYearly: 112000,
+			yearly: 200000,
+		},
 		features: [
-			"20 kg seasonal vegetables",
-			"5 kg fruits",
-			"Daily delivery",
-			"Personalized meal plans",
-			"Farm visit access",
-			"Dedicated support",
+			"10–12 Kg fresh vegetables per delivery",
+			"2 deliveries per week",
+			"Wednesdays & Saturdays",
+			"Best for large families",
 		],
 	},
 ];
@@ -55,45 +67,58 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 // ── Kitchen Garden Packages ────────────────────────────────────────
 export const GARDEN_PACKAGES: GardenPackage[] = [
 	{
-		id: "garden-balcony",
-		name: "Balcony Garden",
-		description:
-			"Perfect for apartments. Vertical planters with herbs and greens.",
-		price: 4999,
-		area: "50 sq ft",
-		plants: ["Basil", "Mint", "Lettuce", "Cherry Tomatoes", "Chillies"],
+		id: "grow-bag",
+		name: "4-Month Grow Bag Care Package",
+		duration: "4 months",
+		tiers: [
+			{
+				label: "30 Grow Bags",
+				setupCost: 30000,
+				production: "54–60 kg",
+				weekdayPrice: 30000,
+				weekendPrice: 32000,
+			},
+			{
+				label: "50 Grow Bags",
+				setupCost: 50000,
+				production: "90–100 kg",
+				weekdayPrice: 50000,
+				weekendPrice: 52000,
+			},
+			{
+				label: "100 Grow Bags",
+				setupCost: 90000,
+				production: "180–200 kg",
+				weekdayPrice: 85000,
+				weekendPrice: 90000,
+			},
+		],
+		inclusions:
+			"A complete grow bag solution with grow bags, potting mix, soil, seeds/saplings/crops, bio-agri inputs, weekly Green Officer support (16 visits), and senior agronomist guidance across 4 months.",
 	},
 	{
-		id: "garden-terrace",
-		name: "Terrace Farm",
-		description:
-			"Transform your terrace into a thriving farm with raised beds.",
-		price: 14999,
-		area: "200 sq ft",
-		plants: [
-			"Tomatoes",
-			"Spinach",
-			"Brinjal",
-			"Capsicum",
-			"Coriander",
-			"Curry Leaves",
-			"Beans",
+		id: "land-area",
+		name: "4-Month Land Area Care Package",
+		duration: "4 months",
+		tiers: [
+			{
+				label: "200 Sq. Ft.",
+				production: "35–40 kg",
+				weekdayPrice: 20000,
+			},
+			{
+				label: "500 Sq. Ft.",
+				production: "50–60 kg",
+				weekdayPrice: 40000,
+			},
+			{
+				label: "1000 Sq. Ft.",
+				production: "100–120 kg",
+				weekdayPrice: 64000,
+			},
 		],
-	},
-	{
-		id: "garden-backyard",
-		name: "Backyard Homestead",
-		description:
-			"Full-scale kitchen garden with drip irrigation and composting setup.",
-		price: 29999,
-		area: "500+ sq ft",
-		plants: [
-			"Seasonal Vegetables",
-			"Fruit Saplings",
-			"Herbs",
-			"Microgreens",
-			"Medicinal Plants",
-		],
+		inclusions:
+			"Complete package covering potting mix, seeds/saplings/crops, bio-agri inputs, weekly Green Officer support (16 visits), and senior agronomist guidance (4 visits in 4 months).",
 	},
 ];
 
@@ -234,23 +259,37 @@ export const MOCK_EXPENSES: Expense[] = [
 export const TESTIMONIALS = [
 	{
 		id: "t-1",
-		name: "Ananya Rao",
-		role: "Home Chef",
+		name: "Geeta Malhotra",
+		role: "Kitchen Garden Customer",
 		quote:
-			"Freshroot Farms transformed the way I cook. The vegetables are incredibly fresh and flavourful — nothing like what you get at the supermarket.",
+			"The Kitchen Garden setup was seamless. Their team transformed my terrace into a thriving farm — I now grow my own greens every season!",
 	},
 	{
 		id: "t-2",
-		name: "Karthik Menon",
-		role: "Fitness Enthusiast",
+		name: "Arpana Bansal",
+		role: "Kitchen Garden Customer",
 		quote:
-			"I subscribed to the Family Harvest plan and the quality has been consistently outstanding. My family loves the weekly deliveries!",
+			"Freshroot's grow bag package exceeded my expectations. The agronomist visits keep everything on track and my produce quality is amazing.",
 	},
 	{
 		id: "t-3",
-		name: "Divya Iyer",
-		role: "Urban Gardener",
+		name: "Gunjan Batra",
+		role: "Soil to Fork Subscriber",
 		quote:
-			"The Kitchen Garden setup was seamless. Their team set up my terrace farm in a day, and now I grow my own greens!",
+			"The freshness of the vegetables is unmatched. My family loves the twice-weekly deliveries — it's like having our own farm!",
+	},
+	{
+		id: "t-4",
+		name: "Anita Gauri",
+		role: "Soil to Fork Subscriber",
+		quote:
+			"I subscribed to the 2–3 Pax plan and the quality has been consistently outstanding. Nothing like what you get at the supermarket.",
+	},
+	{
+		id: "t-5",
+		name: "Ivan Jalauddin",
+		role: "Soil to Fork Subscriber",
+		quote:
+			"Farm-fresh organic produce delivered right to my door. Freshroot Farms truly transformed how my family eats — we wouldn't go back!",
 	},
 ] as const;

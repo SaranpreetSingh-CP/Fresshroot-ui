@@ -46,9 +46,9 @@ export default function Footer() {
 					<div>
 						<h4 className="font-semibold text-gray-800">Contact</h4>
 						<ul className="mt-3 space-y-2 text-sm text-gray-600">
-							<li>hello@freshrootfarms.com</li>
-							<li>+91 98765 43210</li>
-							<li>Bengaluru, India</li>
+							<li>farmsfreshroot@gmail.com</li>
+							<li>+91 9217468925, +91 7061968428</li>
+							<li>Delhi, India</li>
 						</ul>
 					</div>
 

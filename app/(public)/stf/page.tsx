@@ -15,11 +15,14 @@ export default function STFPage() {
 				{/* Header */}
 				<div className="text-center">
 					<h1 className="text-4xl font-extrabold text-gray-900">
-						Soil to Fork <span className="text-green-700">Plans</span>
+						Fresh Produce <span className="text-green-700">Packages</span>
 					</h1>
-					<p className="mx-auto mt-4 max-w-2xl text-gray-600">
-						Fresh, organic produce harvested and delivered within 24 hours. Pick
-						the plan that fits your household and taste.
+					<p className="mx-auto mt-4 max-w-2xl text-lg font-medium text-gray-700">
+						Fresh Vegetable Basket
+					</p>
+					<p className="mx-auto mt-2 max-w-2xl text-gray-600">
+						Farm-fresh organic vegetables harvested and delivered within 24
+						hours. Pick the plan that fits your household.
 					</p>
 				</div>
 
@@ -31,9 +34,9 @@ export default function STFPage() {
 				</div>
 
 				{/* Bottom note */}
-				<p className="mt-12 text-center text-sm text-gray-500">
-					All plans are month-to-month — cancel or switch anytime. Prices
-					inclusive of delivery.
+				<p className="mt-12 text-center text-sm italic text-gray-500">
+					*Two deliveries per week, scheduled for Wednesdays and Saturdays.
+					Prices inclusive of delivery.
 				</p>
 			</div>
 		</section>
