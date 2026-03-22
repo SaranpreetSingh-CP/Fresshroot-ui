@@ -23,6 +23,8 @@ interface DataTableProps<T> {
 	footer?: ReactNode;
 	/** Show when data is empty */
 	emptyMessage?: string;
+	/** Extra classes on the wrapper div */
+	className?: string;
 }
 
 export default function DataTable<T>({
@@ -31,11 +33,12 @@ export default function DataTable<T>({
 	keyExtractor,
 	footer,
 	emptyMessage = "No data available.",
+	className,
 }: DataTableProps<T>) {
 	return (
-		<div className="overflow-x-auto">
+		<div className={cn("overflow-auto", className)}>
 			<table className="w-full text-left text-sm">
-				<thead>
+				<thead className="sticky top-0 z-10 bg-white">
 					<tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
 						{columns.map((col, i) => (
 							<th

@@ -92,3 +92,42 @@ export interface CustomerDashboardResponse {
 	subscriptions: DashboardSubscription[];
 	deliveries: DashboardDelivery[];
 }
+
+// ── Admin Dashboard API Response ───────────────────────────────────
+export interface AdminCustomer {
+	name: string;
+	email: string | null;
+	plan: string;
+	joined: string;
+	status: "active" | "inactive";
+}
+
+export interface AdminOrder {
+	id: string;
+	customerName: string;
+	items: string[];
+	total: number;
+	date: string;
+	status: "pending" | "processing" | "delivered" | "cancelled";
+}
+
+export interface AdminExpense {
+	category: string;
+	description: string;
+	amount: number;
+	date: string;
+}
+
+export interface AdminDashboardSummary {
+	totalCustomers: number;
+	activeCustomers: number;
+	revenue: number;
+	expenses: number;
+}
+
+export interface AdminDashboardResponse {
+	summary: AdminDashboardSummary;
+	customers: AdminCustomer[];
+	orders: AdminOrder[];
+	expenses: AdminExpense[];
+}
