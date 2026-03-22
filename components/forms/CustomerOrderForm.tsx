@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Select } from "@/components/FormFields";
 import Button from "@/components/Button";
 import OrderItemRow from "@/components/OrderItemRow";
 import { useVegetables } from "@/hooks/useVegetables";
 import type { Vegetable } from "@/services/vegetable.service";
 import type { OrderItemInput } from "@/utils/types";
 
-interface OrderFormProps {
-	customers: { value: string; label: string }[];
-	onSubmit: (data: { customerId: string; items: OrderItemInput[] }) => void;
+interface CustomerOrderFormProps {
+	onSubmit: (items: OrderItemInput[]) => void;
 	isSubmitting?: boolean;
 }
 
@@ -25,17 +23,13 @@ const emptyRow: ItemRow = {
 	unit: "kg",
 };
 
-export default function OrderForm({
-	customers,
+export default function CustomerOrderForm({
 	onSubmit,
 	isSubmitting,
-}: OrderFormProps) {
+}: CustomerOrderFormProps) {
 	const { data: vegetables = [], isLoading: vegLoading } = useVegetables();
-	const [customerId, setCustomerId] = useState("");
 	const [rows, setRows] = useState<ItemRow[]>([{ ...emptyRow }]);
-	const [errors, setErrors] = useState<{ customer?: string; items?: string }>(
-		{},
-	);
+	const [error, setError] = useState("");
 
 	function addItem() {
 		setRows((prev) => [...prev, { ...emptyRow }]);
@@ -63,34 +57,32 @@ export default function OrderForm({
 					: row,
 			),
 		);
-		setErrors((prev) => {
-			const n = { ...prev };
-			delete n.items;
-			return n;
-		});
+		setError("");
 	}
 
 	function validate(): boolean {
-		const e: typeof errors = {};
-		if (!customerId) e.customer = "Select a customer";
-		if (rows.length === 0) e.items = "Add at least one item";
-		else if (rows.some((r) => r.vegId === null || r.quantity <= 0))
-			e.items = "Select a vegetable and enter quantity > 0 for each item";
-		setErrors(e);
-		return Object.keys(e).length === 0;
+		if (rows.length === 0) {
+			setError("Add at least one item");
+			return false;
+		}
+		if (rows.some((r) => r.vegId === null || r.quantity <= 0)) {
+			setError("Select a vegetable and enter quantity > 0 for each item");
+			return false;
+		}
+		setError("");
+		return true;
 	}
 
 	function handleSubmit(ev: FormEvent) {
 		ev.preventDefault();
 		if (!validate()) return;
-		onSubmit({
-			customerId,
-			items: rows.map(({ itemName, quantity, unit }) => ({
+		onSubmit(
+			rows.map(({ itemName, quantity, unit }) => ({
 				itemName,
 				quantity,
 				unit,
 			})),
-		});
+		);
 	}
 
 	const selectedVegIds = rows
@@ -98,30 +90,8 @@ export default function OrderForm({
 		.filter((id): id is number => id !== null);
 
 	return (
-		<form onSubmit={handleSubmit} className="flex flex-col gap-5">
-			{/* Customer select */}
-			<div className="flex-shrink-0">
-				<Select
-					label="Customer *"
-					id="order-customer"
-					options={customers}
-					value={customerId}
-					onChange={(e) => {
-						setCustomerId(e.target.value);
-						setErrors((prev) => {
-							const n = { ...prev };
-							delete n.customer;
-							return n;
-						});
-					}}
-				/>
-				{errors.customer && (
-					<p className="mt-1 text-xs text-red-600">{errors.customer}</p>
-				)}
-			</div>
-
-			{/* Items */}
-			<div className="flex-1 min-h-0 space-y-3">
+		<form onSubmit={handleSubmit} className="space-y-5">
+			<div className="space-y-3">
 				<div className="flex items-center justify-between">
 					<label className="block text-sm font-medium text-gray-700">
 						Items *
@@ -149,12 +119,12 @@ export default function OrderForm({
 					))}
 				</div>
 
-				{errors.items && <p className="text-xs text-red-600">{errors.items}</p>}
+				{error && <p className="text-xs text-red-600">{error}</p>}
 			</div>
 
-			<div className="flex justify-end pt-3 flex-shrink-0 border-t border-gray-100">
+			<div className="flex justify-end pt-2">
 				<Button type="submit" disabled={isSubmitting}>
-					{isSubmitting ? "Creating…" : "Create Order"}
+					{isSubmitting ? "Placing Order…" : "Place Order"}
 				</Button>
 			</div>
 		</form>

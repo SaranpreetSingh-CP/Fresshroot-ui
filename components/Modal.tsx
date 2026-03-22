@@ -41,11 +41,11 @@ export default function Modal({
 			{/* Panel */}
 			<div
 				className={cn(
-					"relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto",
+					"relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-xl max-h-[90vh] flex flex-col",
 					className,
 				)}
 			>
-				<div className="mb-4 flex items-center justify-between">
+				<div className="mb-4 flex items-center justify-between flex-shrink-0 px-6 pt-6">
 					<h2 className="text-lg font-bold text-gray-900">{title}</h2>
 					<button
 						onClick={onClose}
@@ -54,7 +54,9 @@ export default function Modal({
 						✕
 					</button>
 				</div>
-				{children}
+				<div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6">
+					{children}
+				</div>
 			</div>
 		</div>
 	);

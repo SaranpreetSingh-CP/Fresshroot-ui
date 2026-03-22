@@ -78,7 +78,9 @@ export function Select({
 				)}
 				{...props}
 			>
-				<option value="">Select…</option>
+				<option key="" value="">
+					Select…
+				</option>
 				{options.map((o) => (
 					<option key={o.value} value={o.value}>
 						{o.label}
