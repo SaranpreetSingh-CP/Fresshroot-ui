@@ -65,13 +65,24 @@ const columns: Column<AdminOrder>[] = [
 
 interface OrdersTableProps {
 	orders: AdminOrder[];
+	onAdd?: () => void;
 }
 
-export default function OrdersTable({ orders }: OrdersTableProps) {
+export default function OrdersTable({ orders, onAdd }: OrdersTableProps) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Recent Orders</CardTitle>
+				<div className="flex items-center justify-between">
+					<CardTitle>Recent Orders</CardTitle>
+					{onAdd && (
+						<button
+							onClick={onAdd}
+							className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 transition"
+						>
+							+ Create Order
+						</button>
+					)}
+				</div>
 			</CardHeader>
 			<DataTable
 				columns={columns}

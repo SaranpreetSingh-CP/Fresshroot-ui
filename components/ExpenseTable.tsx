@@ -45,21 +45,33 @@ const columns: Column<AdminExpense>[] = [
 interface ExpenseTableProps {
 	expenses: AdminExpense[];
 	totalExpenses: number;
+	onAdd?: () => void;
 }
 
 export default function ExpenseTable({
 	expenses = [],
 	totalExpenses = 0,
+	onAdd,
 }: ExpenseTableProps) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Expense Tracker</CardTitle>
+				<div className="flex items-center justify-between">
+					<CardTitle>Expense Tracker</CardTitle>
+					{onAdd && (
+						<button
+							onClick={onAdd}
+							className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 transition"
+						>
+							+ Add Expense
+						</button>
+					)}
+				</div>
 			</CardHeader>
 			<DataTable
 				columns={columns}
 				data={expenses}
-				keyExtractor={(e) => `${e.category}-${e.date}-${e.amount}`}
+				keyExtractor={(e, i) => `${e.category}-${e.date}-${e.amount}-${i}`}
 				emptyMessage="No expenses recorded."
 				footer={
 					expenses.length > 0 ? (

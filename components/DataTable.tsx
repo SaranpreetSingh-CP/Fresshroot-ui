@@ -18,7 +18,7 @@ interface DataTableProps<T> {
 	columns: Column<T>[];
 	data: T[];
 	/** Unique key extractor for each row */
-	keyExtractor: (row: T) => string;
+	keyExtractor: (row: T, index: number) => string;
 	/** Optional footer row */
 	footer?: ReactNode;
 	/** Show when data is empty */
@@ -65,8 +65,8 @@ export default function DataTable<T>({
 							</td>
 						</tr>
 					) : (
-						data.map((row) => (
-							<tr key={keyExtractor(row)}>
+						data.map((row, idx) => (
+							<tr key={keyExtractor(row, idx)}>
 								{columns.map((col, i) => (
 									<td
 										key={col.accessorKey}

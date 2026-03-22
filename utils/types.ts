@@ -80,9 +80,16 @@ export interface DashboardSubscription {
 }
 
 export interface DashboardDelivery {
+	id: string;
 	date: string;
 	items: string[];
-	status: "delivered" | "in-transit" | "scheduled" | "cancelled";
+	status:
+		| "delivered"
+		| "in-transit"
+		| "scheduled"
+		| "cancelled"
+		| "not-started"
+		| "out-for-delivery";
 }
 
 export interface CustomerDashboardResponse {
@@ -95,8 +102,11 @@ export interface CustomerDashboardResponse {
 
 // ── Admin Dashboard API Response ───────────────────────────────────
 export interface AdminCustomer {
+	id: string;
 	name: string;
 	email: string | null;
+	phone?: string;
+	address?: string;
 	plan: string;
 	joined: string;
 	status: "active" | "inactive";
@@ -131,3 +141,36 @@ export interface AdminDashboardResponse {
 	orders: AdminOrder[];
 	expenses: AdminExpense[];
 }
+
+// ── Form / Mutation Types ──────────────────────────────────────────
+export interface CustomerFormData {
+	name: string;
+	phone: string;
+	email: string;
+	address: string;
+}
+
+export interface OrderItemInput {
+	itemName: string;
+	quantity: number;
+	unit: "kg" | "piece";
+}
+
+export interface OrderFormData {
+	customerId: string;
+	items: OrderItemInput[];
+}
+
+export interface ExpenseFormData {
+	category: string;
+	description: string;
+	amount: number;
+	date: string;
+	file?: File;
+}
+
+export type DeliveryStatus =
+	| "not-started"
+	| "in-transit"
+	| "out-for-delivery"
+	| "delivered";
