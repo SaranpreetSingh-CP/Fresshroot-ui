@@ -6,8 +6,16 @@ import {
 	useCreateCustomer,
 	useUpdateCustomer,
 	useCreateOrder,
+	useUpdateOrder,
+	useUpdateOrderStatus,
+	useDeleteOrder,
+	useOrderDetail,
 	useCreateExpense,
+	useUpdateExpense,
+	useExpensesList,
+	useExpenseDetail,
 	useCustomersList,
+	useCustomerDetail,
 } from "@/hooks/useAdminMutations";
 import { useToast } from "@/components/Toast";
 import AdminSummaryCards from "@/components/AdminSummaryCards";
@@ -21,8 +29,11 @@ import OrderForm from "@/components/forms/OrderForm";
 import ExpenseForm from "@/components/forms/ExpenseForm";
 import type {
 	AdminCustomer,
+	AdminOrder,
+	AdminExpense,
 	CustomerFormData,
 	OrderFormData,
+	OrderStatus,
 	ExpenseFormData,
 } from "@/utils/types";
 
@@ -31,7 +42,9 @@ type ModalType =
 	| "addCustomer"
 	| "editCustomer"
 	| "addOrder"
-	| "addExpense";
+	| "editOrder"
+	| "addExpense"
+	| "editExpense";
 
 export default function AdminDashboard() {
 	const { data, isLoading, isError, error } = useAdminDashboard();
@@ -39,15 +52,35 @@ export default function AdminDashboard() {
 	const createCustomer = useCreateCustomer();
 	const updateCustomer = useUpdateCustomer();
 	const createOrder = useCreateOrder();
+	const updateOrder = useUpdateOrder();
+	const updateOrderStatus = useUpdateOrderStatus();
+	const deleteOrderMut = useDeleteOrder();
 	const createExpense = useCreateExpense();
+	const updateExpenseMut = useUpdateExpense();
+	const { data: expensesList } = useExpensesList();
 	const { toast } = useToast();
 
 	const [openModal, setOpenModal] = useState<ModalType>(null);
 	const [editTarget, setEditTarget] = useState<AdminCustomer | null>(null);
+	const [editOrderTarget, setEditOrderTarget] = useState<AdminOrder | null>(
+		null,
+	);
+	const [editExpenseTarget, setEditExpenseTarget] =
+		useState<AdminExpense | null>(null);
+	const { data: customerDetail, isLoading: isLoadingDetail } =
+		useCustomerDetail(editTarget?.id ?? null);
+	const { data: orderDetail, isLoading: isLoadingOrder } = useOrderDetail(
+		editOrderTarget?.id ?? null,
+	);
+	const { data: expenseDetail, isLoading: isLoadingExpense } = useExpenseDetail(
+		editExpenseTarget?.id ?? null,
+	);
 
 	function closeModal() {
 		setOpenModal(null);
 		setEditTarget(null);
+		setEditOrderTarget(null);
+		setEditExpenseTarget(null);
 	}
 
 	/* ── Handlers ─────────────────────────────────────────────── */
@@ -98,6 +131,54 @@ export default function AdminDashboard() {
 		});
 	}
 
+	function handleUpdateOrder(formData: OrderFormData, id?: string) {
+		if (!id) return;
+		updateOrder.mutate(
+			{ id, data: formData },
+			{
+				onSuccess: () => {
+					toast("Order updated successfully", "success");
+					closeModal();
+				},
+				onError: (err) =>
+					toast(
+						err instanceof Error ? err.message : "Failed to update order",
+						"error",
+					),
+			},
+		);
+	}
+
+	function handleEditOrder(order: AdminOrder) {
+		setEditOrderTarget(order);
+		setOpenModal("editOrder");
+	}
+
+	function handleStatusChange(orderId: string, status: OrderStatus) {
+		updateOrderStatus.mutate(
+			{ id: orderId, status },
+			{
+				onSuccess: () => toast("Status updated", "success"),
+				onError: (err) =>
+					toast(
+						err instanceof Error ? err.message : "Failed to update status",
+						"error",
+					),
+			},
+		);
+	}
+
+	function handleDeleteOrder(orderId: string) {
+		deleteOrderMut.mutate(orderId, {
+			onSuccess: () => toast("Order deleted", "success"),
+			onError: (err) =>
+				toast(
+					err instanceof Error ? err.message : "Failed to delete order",
+					"error",
+				),
+		});
+	}
+
 	function handleCreateExpense(formData: ExpenseFormData) {
 		createExpense.mutate(formData, {
 			onSuccess: () => {
@@ -112,6 +193,29 @@ export default function AdminDashboard() {
 		});
 	}
 
+	function handleUpdateExpense(formData: ExpenseFormData) {
+		if (!editExpenseTarget?.id) return;
+		updateExpenseMut.mutate(
+			{ id: editExpenseTarget.id, data: formData },
+			{
+				onSuccess: () => {
+					toast("Expense updated successfully", "success");
+					closeModal();
+				},
+				onError: (err) =>
+					toast(
+						err instanceof Error ? err.message : "Failed to update expense",
+						"error",
+					),
+			},
+		);
+	}
+
+	function handleEditExpense(expense: AdminExpense) {
+		setEditExpenseTarget(expense);
+		setOpenModal("editExpense");
+	}
+
 	function handleEditCustomer(customer: AdminCustomer) {
 		setEditTarget(customer);
 		setOpenModal("editCustomer");
@@ -120,7 +224,7 @@ export default function AdminDashboard() {
 	/* ── Customer dropdown options for OrderForm ──────────────── */
 	const customerOptions = (customersList ?? data?.customers ?? []).map(
 		(c: { id?: string; name: string }) => ({
-			value: c.id ?? c.name,
+			value: String(c.id ?? c.name),
 			label: c.name,
 		}),
 	);
@@ -189,15 +293,19 @@ export default function AdminDashboard() {
 					<OrdersTable
 						orders={data.orders}
 						onAdd={() => setOpenModal("addOrder")}
+						onEdit={handleEditOrder}
+						onDelete={handleDeleteOrder}
+						onStatusChange={handleStatusChange}
 					/>
 				</section>
 
 				{/* ── Expense Tracker ──────────────────────────────────── */}
 				<section id="expenses">
 					<ExpenseTable
-						expenses={data.expenses}
+						expenses={expensesList ?? data.expenses}
 						totalExpenses={data.summary.expenses}
 						onAdd={() => setOpenModal("addExpense")}
+						onEdit={handleEditExpense}
 					/>
 				</section>
 			</div>
@@ -208,6 +316,7 @@ export default function AdminDashboard() {
 				open={openModal === "addCustomer"}
 				onClose={closeModal}
 				title="Add Customer"
+				className="max-w-2xl"
 			>
 				<CustomerForm
 					onSubmit={handleCreateCustomer}
@@ -219,20 +328,51 @@ export default function AdminDashboard() {
 				open={openModal === "editCustomer"}
 				onClose={closeModal}
 				title="Edit Customer"
+				className="max-w-2xl"
 			>
-				{editTarget && (
-					<CustomerForm
-						initial={{
-							id: editTarget.id,
-							name: editTarget.name,
-							phone: editTarget.phone ?? "",
-							email: editTarget.email ?? "",
-							address: editTarget.address ?? "",
-						}}
-						onSubmit={handleUpdateCustomer}
-						isSubmitting={updateCustomer.isPending}
-					/>
+				{editTarget && isLoadingDetail && (
+					<div className="flex items-center justify-center py-12">
+						<span className="text-sm text-gray-500">
+							Loading customer details…
+						</span>
+					</div>
 				)}
+				{editTarget &&
+					!isLoadingDetail &&
+					(() => {
+						const c = customerDetail ?? editTarget;
+						// API returns subscriptions[] — pick the latest one
+						const subs = c.subscriptions as AdminCustomer["subscriptions"];
+						const sub = subs?.length ? subs[subs.length - 1] : null;
+						return (
+							<CustomerForm
+								key={`${c.id}-${sub?.id ?? "no-sub"}`}
+								initial={{
+									id: String(c.id),
+									name: c.name,
+									phone: c.phone ?? "",
+									email: c.email ?? "",
+									address: c.address ?? "",
+									...(sub
+										? {
+												subscription: {
+													type: (sub.type as "STF" | "KG") ?? "",
+													package: sub.package ?? "",
+													actualPrice: sub.actualPrice ?? "",
+													offerPrice: sub.offerPrice ?? "",
+													paymentTerms: sub.paymentTerms ?? "",
+													startDate: sub.startDate?.slice(0, 10) ?? "",
+													status:
+														(sub.status as "active" | "inactive") ?? "active",
+												},
+											}
+										: {}),
+								}}
+								onSubmit={handleUpdateCustomer}
+								isSubmitting={updateCustomer.isPending}
+							/>
+						);
+					})()}
 			</Modal>
 
 			<Modal
@@ -248,6 +388,61 @@ export default function AdminDashboard() {
 			</Modal>
 
 			<Modal
+				open={openModal === "editOrder"}
+				onClose={closeModal}
+				title="Edit Order"
+			>
+				{editOrderTarget && isLoadingOrder && (
+					<div className="flex items-center justify-center py-12">
+						<span className="text-sm text-gray-500">
+							Loading order details…
+						</span>
+					</div>
+				)}
+				{editOrderTarget &&
+					!isLoadingOrder &&
+					(() => {
+						const o = orderDetail ?? editOrderTarget;
+						const items = (o.items ?? []).map(
+							(item: {
+								name?: string;
+								vegetableId?: number;
+								quantity?: number;
+								unit?: string;
+							}) =>
+								typeof item === "string"
+									? {
+											vegId: null,
+											itemName: item,
+											quantity: 1,
+											unit: "kg" as const,
+										}
+									: {
+											vegId: item.vegetableId ?? null,
+											itemName: item.name ?? "",
+											quantity: item.quantity ?? 1,
+											unit: (item.unit as "kg" | "piece") ?? "kg",
+										},
+						);
+						return (
+							<OrderForm
+								key={o.id}
+								customers={customerOptions}
+								initial={{
+									id: o.id,
+									customerId: String(o.customerId ?? ""),
+									status: o.status,
+									itemRows: items,
+									items: [],
+								}}
+								onSubmit={handleUpdateOrder}
+								isSubmitting={updateOrder.isPending}
+							/>
+						);
+					})()}
+			</Modal>
+
+			<Modal
 				open={openModal === "addExpense"}
 				onClose={closeModal}
 				title="Record Expense"
@@ -256,6 +451,28 @@ export default function AdminDashboard() {
 					onSubmit={handleCreateExpense}
 					isSubmitting={createExpense.isPending}
 				/>
+			</Modal>
+
+			<Modal
+				open={openModal === "editExpense"}
+				onClose={closeModal}
+				title="Edit Expense"
+			>
+				{editExpenseTarget && isLoadingExpense && (
+					<div className="flex items-center justify-center py-12">
+						<span className="text-sm text-gray-500">
+							Loading expense details…
+						</span>
+					</div>
+				)}
+				{editExpenseTarget && !isLoadingExpense && (
+					<ExpenseForm
+						key={editExpenseTarget.id}
+						initial={expenseDetail ?? editExpenseTarget}
+						onSubmit={handleUpdateExpense}
+						isSubmitting={updateExpenseMut.isPending}
+					/>
+				)}
 			</Modal>
 		</>
 	);

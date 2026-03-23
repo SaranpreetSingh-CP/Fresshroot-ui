@@ -37,6 +37,7 @@ export { default as SupportChat } from "./SupportChat";
 export { default as VegetableDropdown } from "./VegetableDropdown";
 export { default as OrderItemRow } from "./OrderItemRow";
 export { default as CustomerForm } from "./forms/CustomerForm";
+export { default as SubscriptionForm } from "./forms/SubscriptionForm";
 export { default as OrderForm } from "./forms/OrderForm";
 export { default as CustomerOrderForm } from "./forms/CustomerOrderForm";
 export { default as ExpenseForm } from "./forms/ExpenseForm";

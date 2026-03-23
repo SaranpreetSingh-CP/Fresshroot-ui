@@ -6,13 +6,16 @@ import Button from "@/components/Button";
 import OrderItemRow from "@/components/OrderItemRow";
 import { useVegetables } from "@/hooks/useVegetables";
 import type { Vegetable } from "@/services/vegetable.service";
-import type { OrderItemInput } from "@/utils/types";
+import type { OrderItemInput, OrderFormData, OrderStatus } from "@/utils/types";
 
-interface OrderFormProps {
-	customers: { value: string; label: string }[];
-	onSubmit: (data: { customerId: string; items: OrderItemInput[] }) => void;
-	isSubmitting?: boolean;
-}
+/* ── Helpers ────────────────────────────────────────────────────── */
+
+const ORDER_STATUSES: { value: OrderStatus; label: string }[] = [
+	{ value: "pending", label: "Pending" },
+	{ value: "confirmed", label: "Confirmed" },
+	{ value: "processing", label: "Processing" },
+	{ value: "delivered", label: "Delivered" },
+];
 
 interface ItemRow extends OrderItemInput {
 	vegId: number | null;
@@ -25,17 +28,44 @@ const emptyRow: ItemRow = {
 	unit: "kg",
 };
 
+/* ── Props ──────────────────────────────────────────────────────── */
+
+interface OrderFormProps {
+	customers: { value: string; label: string }[];
+	/** Pre-fill for editing */
+	initial?: Partial<OrderFormData> & {
+		id?: string;
+		/** Items with vegId for pre-selection */
+		itemRows?: ItemRow[];
+	};
+	onSubmit: (data: OrderFormData, id?: string) => void;
+	isSubmitting?: boolean;
+}
+
+/* ── Component ──────────────────────────────────────────────────── */
+
 export default function OrderForm({
 	customers,
+	initial,
 	onSubmit,
 	isSubmitting,
 }: OrderFormProps) {
 	const { data: vegetables = [], isLoading: vegLoading } = useVegetables();
-	const [customerId, setCustomerId] = useState("");
-	const [rows, setRows] = useState<ItemRow[]>([{ ...emptyRow }]);
-	const [errors, setErrors] = useState<{ customer?: string; items?: string }>(
-		{},
+	const isEdit = Boolean(initial?.id);
+
+	const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
+	const [status, setStatus] = useState<OrderStatus>(
+		initial?.status ?? "pending",
 	);
+	const [rows, setRows] = useState<ItemRow[]>(
+		initial?.itemRows?.length ? initial.itemRows : [{ ...emptyRow }],
+	);
+	const [errors, setErrors] = useState<{
+		customer?: string;
+		items?: string;
+	}>({});
+
+	/* ── Row helpers ─────────────────────────────────────────── */
 
 	function addItem() {
 		setRows((prev) => [...prev, { ...emptyRow }]);
@@ -70,6 +100,8 @@ export default function OrderForm({
 		});
 	}
 
+	/* ── Validation ──────────────────────────────────────────── */
+
 	function validate(): boolean {
 		const e: typeof errors = {};
 		if (!customerId) e.customer = "Select a customer";
@@ -80,17 +112,23 @@ export default function OrderForm({
 		return Object.keys(e).length === 0;
 	}
 
+	/* ── Submit ──────────────────────────────────────────────── */
+
 	function handleSubmit(ev: FormEvent) {
 		ev.preventDefault();
 		if (!validate()) return;
-		onSubmit({
-			customerId,
-			items: rows.map(({ itemName, quantity, unit }) => ({
-				itemName,
-				quantity,
-				unit,
-			})),
-		});
+		onSubmit(
+			{
+				customerId,
+				items: rows.map(({ itemName, quantity, unit }) => ({
+					itemName,
+					quantity,
+					unit,
+				})),
+				status,
+			},
+			initial?.id,
+		);
 	}
 
 	const selectedVegIds = rows
@@ -99,25 +137,38 @@ export default function OrderForm({
 
 	return (
 		<form onSubmit={handleSubmit} className="flex flex-col gap-5">
-			{/* Customer select */}
-			<div className="flex-shrink-0">
+			{/* Customer + Status row */}
+			<div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div>
+					<Select
+						label="Customer *"
+						id="order-customer"
+						options={customers}
+						value={customerId}
+						onChange={(e) => {
+							setCustomerId(e.target.value);
+							setErrors((prev) => {
+								const n = { ...prev };
+								delete n.customer;
+								return n;
+							});
+						}}
+					/>
+					{errors.customer && (
+						<p className="mt-1 text-xs text-red-600">{errors.customer}</p>
+					)}
+				</div>
+
 				<Select
-					label="Customer *"
-					id="order-customer"
-					options={customers}
-					value={customerId}
-					onChange={(e) => {
-						setCustomerId(e.target.value);
-						setErrors((prev) => {
-							const n = { ...prev };
-							delete n.customer;
-							return n;
-						});
-					}}
+					label="Status"
+					id="order-status"
+					options={ORDER_STATUSES.map((s) => ({
+						value: s.value,
+						label: s.label,
+					}))}
+					value={status}
+					onChange={(e) => setStatus(e.target.value as OrderStatus)}
 				/>
-				{errors.customer && (
-					<p className="mt-1 text-xs text-red-600">{errors.customer}</p>
-				)}
 			</div>
 
 			{/* Items */}
@@ -154,7 +205,13 @@ export default function OrderForm({
 
 			<div className="flex justify-end pt-3 flex-shrink-0 border-t border-gray-100">
 				<Button type="submit" disabled={isSubmitting}>
-					{isSubmitting ? "Creating…" : "Create Order"}
+					{isSubmitting
+						? isEdit
+							? "Updating…"
+							: "Creating…"
+						: isEdit
+							? "Update Order"
+							: "Create Order"}
 				</Button>
 			</div>
 		</form>

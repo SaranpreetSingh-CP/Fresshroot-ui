@@ -46,7 +46,9 @@ export default function CustomersTable({
 			header: "Joined",
 			accessorKey: "joined",
 			cell: (row) => (
-				<span className="text-gray-600">{formatDate(row.joined)}</span>
+				<span className="text-gray-600">
+					{row.joined ? formatDate(row.joined) : "—"}
+				</span>
 			),
 		},
 		{

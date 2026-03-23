@@ -120,25 +120,62 @@ export interface AdminCustomer {
 	email: string | null;
 	phone?: string;
 	address?: string;
-	plan: string;
-	joined: string;
-	status: "active" | "inactive";
+	plan?: string;
+	joined?: string;
+	status?: "active" | "inactive";
+	createdAt?: string;
+	/** Subscriptions array returned by API */
+	subscriptions?: {
+		id?: number;
+		type?: string;
+		package?: string;
+		actualPrice?: number | null;
+		offerPrice?: number | null;
+		paymentTerms?: string | null;
+		startDate?: string;
+		status?: string;
+	}[];
+}
+
+export type OrderStatus =
+	| "pending"
+	| "confirmed"
+	| "processing"
+	| "delivered"
+	| "cancelled";
+
+export interface AdminOrderItem {
+	name: string;
+	unit: string;
+	quantity: number;
+	vegetableId: number;
 }
 
 export interface AdminOrder {
 	id: string;
-	customerName: string;
-	items: string[];
-	total: number;
-	date: string;
-	status: "pending" | "processing" | "delivered" | "cancelled";
+	customerId: number;
+	customerName?: string;
+	items: AdminOrderItem[] | string[];
+	total?: number;
+	totalAmount?: number;
+	date?: string;
+	deliveryDate?: string;
+	status: OrderStatus;
+	notes?: string | null;
+	createdAt?: string;
+	customer?: { id: number; name: string };
 }
 
 export interface AdminExpense {
+	id: string;
 	category: string;
 	description: string;
 	amount: number;
 	date: string;
+	paidTo?: string | null;
+	receipt?: string | null;
+	billUrl?: string | null;
+	createdAt?: string;
 }
 
 export interface AdminDashboardSummary {
@@ -156,11 +193,22 @@ export interface AdminDashboardResponse {
 }
 
 // ── Form / Mutation Types ──────────────────────────────────────────
+export interface SubscriptionFormData {
+	type: "STF" | "KG" | "";
+	package: string;
+	actualPrice: number | "";
+	offerPrice: number | "";
+	paymentTerms: string;
+	startDate: string;
+	status: "active" | "inactive";
+}
+
 export interface CustomerFormData {
 	name: string;
 	phone: string;
 	email: string;
 	address: string;
+	subscription?: SubscriptionFormData;
 }
 
 export interface OrderItemInput {
@@ -172,6 +220,7 @@ export interface OrderItemInput {
 export interface OrderFormData {
 	customerId: string;
 	items: OrderItemInput[];
+	status?: OrderStatus;
 }
 
 export interface ExpenseFormData {
