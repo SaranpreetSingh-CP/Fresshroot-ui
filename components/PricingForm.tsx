@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Card, { CardHeader, CardTitle } from "@/components/Card";
+import VegetablePriceInput from "@/components/VegetablePriceInput";
 import {
 	useVegetablePrices,
 	useSetVegetablePrices,
@@ -31,13 +32,20 @@ export default function PricingForm() {
 
 	// Local price state: { [vegetableId]: price string }
 	const [prices, setPricesLocal] = useState<Record<number, string>>({});
+	// Original prices from API (to detect changes)
+	const [originalPrices, setOriginalPrices] = useState<Record<number, string>>(
+		{},
+	);
 	const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
+	// Track whether user has touched any field since last load
+	const [dirty, setDirty] = useState(false);
 
-	// Merge existing prices into local state when data loads
+	// Merge existing prices into local state when data loads (only if not dirty)
 	useEffect(() => {
 		if (!vegetables) return;
+		if (dirty) return; // Don't overwrite user edits
 
-		// Build a price lookup from the API response (handles both `id` and `vegetableId` keys)
+		// Build a price lookup from the API response
 		const priceLookup: Record<number, number> = {};
 		if (existingPrices) {
 			for (const p of existingPrices) {
@@ -53,31 +61,57 @@ export default function PricingForm() {
 			map[v.id] = priceLookup[v.id] != null ? String(priceLookup[v.id]) : "";
 		}
 		setPricesLocal(map);
-	}, [vegetables, existingPrices]);
+		setOriginalPrices(map);
+	}, [vegetables, existingPrices, dirty]);
+
+	// Reset dirty flag when date changes
+	useEffect(() => {
+		setDirty(false);
+	}, [date]);
 
 	const handlePriceChange = useCallback((vegId: number, value: string) => {
 		setPricesLocal((prev) => ({ ...prev, [vegId]: value }));
+		setDirty(true);
 	}, []);
 
-	/* -- Validation ----------------------------------------------- */
+	/* -- Derived state -------------------------------------------- */
 
-	function isValid(): boolean {
-		if (!vegetables?.length) return false;
-		return vegetables.every((v) => {
-			const val = Number(prices[v.id]);
-			return !isNaN(val) && val > 0;
-		});
-	}
+	// Vegetables with a non-empty, valid (> 0) price — these get sent to API
+	const submittablePrices = vegetables
+		? vegetables.filter((v) => {
+				const val = prices[v.id];
+				if (!val || val.trim() === "") return false;
+				const num = Number(val);
+				return !isNaN(num) && num > 0;
+			})
+		: [];
+
+	const hasInvalidPrice = vegetables
+		? vegetables.some((v) => {
+				const val = prices[v.id];
+				if (!val || val.trim() === "") return false; // empty is OK
+				const num = Number(val);
+				return isNaN(num) || num < 0;
+			})
+		: false;
+
+	// Enable button when user has made changes and there are no invalid values
+	const canSubmit = dirty && !hasInvalidPrice;
 
 	/* -- Submit ---------------------------------------------------- */
 
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		if (!vegetables?.length) return;
+		if (!canSubmit) return;
+
+		if (submittablePrices.length === 0) {
+			toast("Enter a price greater than 0 for at least one vegetable", "error");
+			return;
+		}
 
 		const payload = {
 			date,
-			prices: vegetables.map((v) => ({
+			prices: submittablePrices.map((v) => ({
 				vegetableId: v.id,
 				price: Number(prices[v.id]),
 			})),
@@ -85,8 +119,12 @@ export default function PricingForm() {
 
 		setPricesMut.mutate(payload, {
 			onSuccess: () => {
-				toast("Prices saved successfully", "success");
-				const ids = new Set(vegetables.map((v) => v.id));
+				toast(
+					`Prices saved for ${submittablePrices.length} vegetable${submittablePrices.length > 1 ? "s" : ""}`,
+					"success",
+				);
+				setDirty(false); // allow refetched data to load in
+				const ids = new Set(submittablePrices.map((v) => v.id));
 				setHighlightedIds(ids);
 				setTimeout(() => setHighlightedIds(new Set()), 2000);
 			},
@@ -104,7 +142,12 @@ export default function PricingForm() {
 		<Card>
 			<CardHeader>
 				<div className="flex items-center justify-between flex-wrap gap-3">
-					<CardTitle>Set Vegetable Prices</CardTitle>
+					<div>
+						<CardTitle>Set Vegetable Prices</CardTitle>
+						<p className="mt-0.5 text-xs text-gray-400">
+							You can update prices anytime. Only filled fields will be saved.
+						</p>
+					</div>
 					<input
 						type="date"
 						value={date}
@@ -116,7 +159,7 @@ export default function PricingForm() {
 
 			{isLoading && (
 				<div className="flex items-center justify-center py-8">
-					<span className="text-sm text-gray-400">Loading vegetables…</span>
+					<span className="text-sm text-gray-400">Loading vegetables...</span>
 				</div>
 			)}
 
@@ -130,7 +173,7 @@ export default function PricingForm() {
 
 			{!isLoading && !isErrorVeg && vegetables && (
 				<form onSubmit={handleSubmit} className="space-y-4">
-					{/* -- Table header ------------------------------------ */}
+					{/* Table header */}
 					<div className="grid grid-cols-[1fr_auto] gap-4 px-2 pb-1 border-b border-gray-200">
 						<span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
 							Vegetable
@@ -140,45 +183,20 @@ export default function PricingForm() {
 						</span>
 					</div>
 
-					{/* -- Rows -------------------------------------------- */}
+					{/* Rows */}
 					<div className="max-h-96 overflow-y-auto divide-y divide-gray-100">
-						{vegetables.map((veg) => {
-							const highlighted = highlightedIds.has(veg.id);
-							return (
-								<div
-									key={veg.id}
-									className={`grid grid-cols-[1fr_auto] items-center gap-4 py-3 px-2 rounded-lg transition-colors ${
-										highlighted ? "bg-green-50 ring-1 ring-green-200" : ""
-									}`}
-								>
-									<div className="flex flex-col">
-										<span className="text-sm font-medium text-gray-900">
-											{veg.name}
-										</span>
-										{veg.hindiName && (
-											<span className="text-xs text-gray-400">
-												{veg.hindiName}
-											</span>
-										)}
-									</div>
-									<div className="flex items-center gap-1.5">
-										<span className="text-sm text-gray-500">₹</span>
-										<input
-											type="number"
-											min="0.01"
-											step="0.01"
-											value={prices[veg.id] ?? ""}
-											onChange={(e) =>
-												handlePriceChange(veg.id, e.target.value)
-											}
-											placeholder="0.00"
-											className="w-24 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-right focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none"
-											required
-										/>
-									</div>
-								</div>
-							);
-						})}
+						{vegetables.map((veg) => (
+							<VegetablePriceInput
+								key={veg.id}
+								vegId={veg.id}
+								name={veg.name}
+								hindiName={veg.hindiName}
+								value={prices[veg.id] ?? ""}
+								originalValue={originalPrices[veg.id] ?? ""}
+								onChange={handlePriceChange}
+								highlighted={highlightedIds.has(veg.id)}
+							/>
+						))}
 					</div>
 
 					{vegetables.length === 0 && (
@@ -188,13 +206,25 @@ export default function PricingForm() {
 					)}
 
 					{vegetables.length > 0 && (
-						<button
-							type="submit"
-							disabled={setPricesMut.isPending || !isValid()}
-							className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-						>
-							{setPricesMut.isPending ? "Saving…" : "Save Prices"}
-						</button>
+						<div className="flex items-center justify-between gap-4 pt-1">
+							{submittablePrices.length > 0 && (
+								<span className="text-xs text-gray-400">
+									{submittablePrices.length} of {vegetables.length} priced
+								</span>
+							)}
+							{submittablePrices.length === 0 && (
+								<span className="text-xs text-gray-400">
+									Enter at least one price to save
+								</span>
+							)}
+							<button
+								type="submit"
+								disabled={setPricesMut.isPending || !canSubmit}
+								className="rounded-xl bg-green-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition ml-auto"
+							>
+								{setPricesMut.isPending ? "Saving..." : "Save Prices"}
+							</button>
+						</div>
 					)}
 				</form>
 			)}
