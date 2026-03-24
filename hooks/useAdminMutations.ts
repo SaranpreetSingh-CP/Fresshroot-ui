@@ -6,6 +6,7 @@ import {
 	updateCustomer,
 	getCustomers,
 	getCustomerById,
+	getCustomerDetails,
 } from "@/services/customer.service";
 import {
 	createOrder,
@@ -186,7 +187,14 @@ export function useCustomerDetail(id: string | null) {
 		staleTime: 0,
 	});
 }
-
+/* ── Customer Details Page (profile + subscriptions + orders) ──── */
+export function useCustomerDetails(id: string) {
+	return useQuery({
+		queryKey: ["customerDetails", id],
+		queryFn: () => getCustomerDetails(id),
+		enabled: !!id,
+	});
+}
 /* ── Update Delivery Status ─────────────────────────────────────── */
 export function useUpdateDeliveryStatus() {
 	const queryClient = useQueryClient();

@@ -63,3 +63,11 @@ export async function getCustomerById(id: string) {
 		throw new Error(`Failed to fetch customer details (${res.status})`);
 	return res.json();
 }
+
+/** GET /customers/:id/details — Fetch customer profile + subscriptions + past orders */
+export async function getCustomerDetails(id: string) {
+	const res = await fetch(`${API_BASE}/customers/${id}/details`);
+	if (!res.ok)
+		throw new Error(`Failed to fetch customer details (${res.status})`);
+	return res.json();
+}

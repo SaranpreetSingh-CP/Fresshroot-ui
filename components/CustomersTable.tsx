@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import Card, { CardHeader, CardTitle } from "@/components/Card";
 import Badge from "@/components/Badge";
 import DataTable from "@/components/DataTable";
@@ -24,6 +27,7 @@ export default function CustomersTable({
 	onEdit,
 	onAdd,
 }: CustomersTableProps) {
+	const router = useRouter();
 	const columns: Column<AdminCustomer>[] = [
 		{
 			header: "Name",
@@ -67,7 +71,10 @@ export default function CustomersTable({
 						accessorKey: "id" as const,
 						cell: (row: AdminCustomer) => (
 							<button
-								onClick={() => onEdit(row)}
+								onClick={(e) => {
+									e.stopPropagation();
+									onEdit(row);
+								}}
 								className="rounded-lg px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-50 transition"
 							>
 								Edit
@@ -99,6 +106,7 @@ export default function CustomersTable({
 				keyExtractor={(c) => c.id ?? `${c.name}-${c.joined}`}
 				emptyMessage="No customers found."
 				className="max-h-96"
+				onRowClick={(c) => router.push(`/dashboard/admin/customers/${c.id}`)}
 			/>
 		</Card>
 	);

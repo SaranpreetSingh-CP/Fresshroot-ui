@@ -22,6 +22,10 @@ export const metadata: Metadata = {
 	description:
 		"Farm-fresh organic produce delivered from soil to your fork. Grow your own kitchen garden with our expert guidance.",
 	metadataBase: new URL("https://freshrootfarms.com"),
+	icons: {
+		icon: "/FRF_logo.svg",
+		apple: "/FRF_logo.svg",
+	},
 	openGraph: {
 		type: "website",
 		siteName: "Freshroot Farms",
