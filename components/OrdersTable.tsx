@@ -22,6 +22,7 @@ const statusColor: Record<OrderStatus, string> = {
 	processing: "bg-purple-100 text-purple-800",
 	delivered: "bg-green-100 text-green-800",
 	cancelled: "bg-red-100 text-red-800",
+	missed: "bg-red-100 text-red-800",
 };
 
 /** Normalize status from API (may be uppercase) to our lowercase OrderStatus */

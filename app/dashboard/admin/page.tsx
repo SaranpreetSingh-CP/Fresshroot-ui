@@ -477,6 +477,7 @@ export default function AdminDashboard() {
 								initial={{
 									id: o.id,
 									customerId: String(o.customerId ?? ""),
+									date: o.deliveryDate ?? o.date,
 									status: o.status,
 									itemRows: items,
 									items: [],

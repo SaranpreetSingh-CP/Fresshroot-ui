@@ -30,6 +30,13 @@ export default function DashboardLayout({
 							Admin
 						</Link>
 						<Link
+							href="/dashboard/admin/analytics"
+							className="transition hover:text-green-700"
+						>
+							Analytics
+						</Link>
+
+						<Link
 							href="/"
 							className="rounded-full border border-gray-300 px-4 py-1.5 transition hover:bg-gray-100"
 						>

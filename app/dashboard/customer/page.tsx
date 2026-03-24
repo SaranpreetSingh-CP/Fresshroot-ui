@@ -53,18 +53,21 @@ export default function CustomerDashboard() {
 
 	/* -- Handlers ----------------------------------------------- */
 
-	function handleCreateOrder(items: OrderItemInput[]) {
-		createOrder.mutate(items, {
-			onSuccess: () => {
-				toast("Order placed successfully!", "success");
-				closeModal();
+	function handleCreateOrder(items: OrderItemInput[], date: string) {
+		createOrder.mutate(
+			{ items, date },
+			{
+				onSuccess: () => {
+					toast("Order placed successfully!", "success");
+					closeModal();
+				},
+				onError: (err) =>
+					toast(
+						err instanceof Error ? err.message : "Failed to place order",
+						"error",
+					),
 			},
-			onError: (err) =>
-				toast(
-					err instanceof Error ? err.message : "Failed to place order",
-					"error",
-				),
-		});
+		);
 	}
 
 	function handleReportIssue(payload: CreateTicketPayload) {

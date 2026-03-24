@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Select } from "@/components/FormFields";
+import { Input, Select } from "@/components/FormFields";
 import Button from "@/components/Button";
 import OrderItemRow from "@/components/OrderItemRow";
 import { useVegetables } from "@/hooks/useVegetables";
@@ -53,7 +53,10 @@ export default function OrderForm({
 	const { data: vegetables = [], isLoading: vegLoading } = useVegetables();
 	const isEdit = Boolean(initial?.id);
 
+	const todayISO = new Date().toISOString().slice(0, 10);
+
 	const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
+	const [date, setDate] = useState(initial?.date?.slice(0, 10) || todayISO);
 	const [status, setStatus] = useState<OrderStatus>(
 		initial?.status ?? "pending",
 	);
@@ -125,6 +128,7 @@ export default function OrderForm({
 					quantity,
 					unit,
 				})),
+				date: date || todayISO,
 				status,
 			},
 			initial?.id,
@@ -137,8 +141,8 @@ export default function OrderForm({
 
 	return (
 		<form onSubmit={handleSubmit} className="flex flex-col gap-5">
-			{/* Customer + Status row */}
-			<div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
+			{/* Customer + Delivery Date + Status row */}
+			<div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-3 gap-4">
 				<div>
 					<Select
 						label="Customer *"
@@ -156,6 +160,22 @@ export default function OrderForm({
 					/>
 					{errors.customer && (
 						<p className="mt-1 text-xs text-red-600">{errors.customer}</p>
+					)}
+				</div>
+
+				<div className="relative">
+					<Input
+						label="Delivery Date"
+						id="order-date"
+						type="date"
+						value={date}
+						min={todayISO}
+						onChange={(e) => setDate(e.target.value)}
+					/>
+					{date === todayISO && (
+						<span className="absolute top-0 right-0 rounded-full bg-green-100 text-green-700 text-[10px] font-medium px-1.5 py-0">
+							Today
+						</span>
 					)}
 				</div>
 

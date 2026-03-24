@@ -221,6 +221,7 @@ export interface OrderItemInput {
 export interface OrderFormData {
 	customerId: string;
 	items: OrderItemInput[];
+	date?: string;
 	status?: OrderStatus;
 }
 
@@ -276,4 +277,30 @@ export interface OrderByDateItem {
 export interface OrdersByDateGroup {
 	date: string;
 	orders: OrderByDateItem[];
+}
+
+// -- Analytics ------------------------------------------------------
+
+export interface AnalyticsSummary {
+	totalOrders: number;
+	delivered: number;
+	missed: number;
+	cancelled: number;
+}
+
+export interface MissedDelivery {
+	id: string;
+	customerName: string;
+	date: string;
+	items: Array<string | { name: string }>;
+}
+
+export interface TrendDataPoint {
+	date: string;
+	total: number;
+}
+
+export interface TopVegetable {
+	vegetableName: string;
+	totalQty: number;
 }

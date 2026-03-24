@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Input } from "@/components/FormFields";
 import Button from "@/components/Button";
 import OrderItemRow from "@/components/OrderItemRow";
 import { useVegetables } from "@/hooks/useVegetables";
@@ -8,7 +9,7 @@ import type { Vegetable } from "@/services/vegetable.service";
 import type { OrderItemInput } from "@/utils/types";
 
 interface CustomerOrderFormProps {
-	onSubmit: (items: OrderItemInput[]) => void;
+	onSubmit: (items: OrderItemInput[], date: string) => void;
 	isSubmitting?: boolean;
 }
 
@@ -28,7 +29,9 @@ export default function CustomerOrderForm({
 	isSubmitting,
 }: CustomerOrderFormProps) {
 	const { data: vegetables = [], isLoading: vegLoading } = useVegetables();
+	const todayISO = new Date().toISOString().slice(0, 10);
 	const [rows, setRows] = useState<ItemRow[]>([{ ...emptyRow }]);
+	const [date, setDate] = useState(todayISO);
 	const [error, setError] = useState("");
 
 	function addItem() {
@@ -82,6 +85,7 @@ export default function CustomerOrderForm({
 				quantity,
 				unit,
 			})),
+			date || todayISO,
 		);
 	}
 
@@ -91,6 +95,24 @@ export default function CustomerOrderForm({
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-5">
+			{/* Delivery Date */}
+			<div className="relative max-w-xs">
+				<Input
+					label="Delivery Date"
+					id="customer-order-date"
+					type="date"
+					value={date}
+					min={todayISO}
+					onChange={(e) => setDate(e.target.value)}
+				/>
+				{date === todayISO && (
+					<span className="absolute top-0 right-0 rounded-full bg-green-100 text-green-700 text-[10px] font-medium px-1.5 py-0">
+						Today
+					</span>
+				)}
+			</div>
+
+			{/* Items */}
 			<div className="space-y-3">
 				<div className="flex items-center justify-between">
 					<label className="block text-sm font-medium text-gray-700">
