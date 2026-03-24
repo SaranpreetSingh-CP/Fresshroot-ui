@@ -16,6 +16,7 @@ import {
 	useExpenseDetail,
 	useCustomersList,
 	useCustomerDetail,
+	useMarkDelivered,
 } from "@/hooks/useAdminMutations";
 import { useToast } from "@/components/Toast";
 import AdminSummaryCards from "@/components/AdminSummaryCards";
@@ -57,6 +58,7 @@ export default function AdminDashboard() {
 	const updateOrder = useUpdateOrder();
 	const updateOrderStatus = useUpdateOrderStatus();
 	const deleteOrderMut = useDeleteOrder();
+	const markDelivered = useMarkDelivered();
 	const createExpense = useCreateExpense();
 	const updateExpenseMut = useUpdateExpense();
 	const { data: expensesList } = useExpensesList();
@@ -69,6 +71,9 @@ export default function AdminDashboard() {
 	);
 	const [editExpenseTarget, setEditExpenseTarget] =
 		useState<AdminExpense | null>(null);
+	const [confirmDeliveredId, setConfirmDeliveredId] = useState<string | null>(
+		null,
+	);
 	const { data: customerDetail, isLoading: isLoadingDetail } =
 		useCustomerDetail(editTarget?.id ?? null);
 	const { data: orderDetail, isLoading: isLoadingOrder } = useOrderDetail(
@@ -176,6 +181,25 @@ export default function AdminDashboard() {
 			onError: (err) =>
 				toast(
 					err instanceof Error ? err.message : "Failed to delete order",
+					"error",
+				),
+		});
+	}
+
+	function handleMarkDelivered(orderId: string) {
+		setConfirmDeliveredId(orderId);
+	}
+
+	function confirmMarkDelivered() {
+		if (!confirmDeliveredId) return;
+		markDelivered.mutate(confirmDeliveredId, {
+			onSuccess: () => {
+				toast("Order marked as delivered", "success");
+				setConfirmDeliveredId(null);
+			},
+			onError: (err) =>
+				toast(
+					err instanceof Error ? err.message : "Failed to mark delivered",
 					"error",
 				),
 		});
@@ -298,6 +322,7 @@ export default function AdminDashboard() {
 							})
 						}
 						onDelete={handleDeleteOrder}
+						onMarkDelivered={handleMarkDelivered}
 					/>
 				</section>
 
@@ -327,7 +352,7 @@ export default function AdminDashboard() {
 
 				{/* -- All Deliveries (Orders by Date) ------------------- */}
 				<section id="all-deliveries">
-					<OrdersByDateSection />
+					<OrdersByDateSection onMarkDelivered={handleMarkDelivered} />
 				</section>
 			</div>
 
@@ -494,6 +519,32 @@ export default function AdminDashboard() {
 						isSubmitting={updateExpenseMut.isPending}
 					/>
 				)}
+			</Modal>
+			{/* -- Confirm Mark Delivered ----------------------------- */}
+			<Modal
+				open={confirmDeliveredId !== null}
+				onClose={() => setConfirmDeliveredId(null)}
+				title="Mark as Delivered"
+				className="max-w-sm"
+			>
+				<p className="text-sm text-gray-600 mb-6">
+					This order was missed. Are you sure you want to mark it as delivered?
+				</p>
+				<div className="flex items-center justify-end gap-3">
+					<button
+						onClick={() => setConfirmDeliveredId(null)}
+						className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+					>
+						Cancel
+					</button>
+					<button
+						onClick={confirmMarkDelivered}
+						disabled={markDelivered.isPending}
+						className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 transition"
+					>
+						{markDelivered.isPending ? "Marking..." : "Yes, Mark Delivered"}
+					</button>
+				</div>
 			</Modal>
 		</>
 	);

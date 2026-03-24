@@ -28,6 +28,11 @@ function isToday(raw: string): boolean {
 	return raw?.slice(0, 10) === todayISO();
 }
 
+/** Get the effective status - prefer computedStatus over status */
+function effectiveStatus(row: OrderByDateItem): string {
+	return (row.computedStatus ?? row.status ?? "").toLowerCase();
+}
+
 const statusBadge: Record<string, "green" | "amber" | "blue" | "red" | "gray"> =
 	{
 		delivered: "green",
@@ -38,77 +43,115 @@ const statusBadge: Record<string, "green" | "amber" | "blue" | "red" | "gray"> =
 		confirmed: "blue",
 		processing: "blue",
 		cancelled: "red",
+		missed: "red",
 	};
 
 function formatCurrency(value: number): string {
 	return `₹${value.toLocaleString("en-IN")}`;
 }
 
-/* -- Columns ------------------------------------------------------ */
+/* -- Columns builder ---------------------------------------------- */
 
-const columns: Column<OrderByDateItem>[] = [
-	{
-		header: "Order ID",
-		accessorKey: "id",
-		cell: (row) => (
-			<span className="font-mono text-xs font-medium text-gray-900">
-				#{String(row.id).slice(0, 8)}
-			</span>
-		),
-	},
-	{
-		header: "Customer",
-		accessorKey: "customerName",
-		cell: (row) => <span className="text-gray-700">{row.customerName}</span>,
-	},
-	{
-		header: "Items",
-		accessorKey: "items",
-		cell: (row) => (
-			<span className="text-gray-600 text-xs">
-				{Array.isArray(row.items) && row.items.length
-					? row.items
-							.map((item) =>
-								typeof item === "string"
-									? item
-									: (item as { name: string }).name,
-							)
-							.join(", ")
-					: "—"}
-			</span>
-		),
-	},
-	{
-		header: "Total",
-		accessorKey: "total",
-		cell: (row) => (
-			<span className="font-medium text-gray-900">
-				{row.total != null ? formatCurrency(row.total) : "—"}
-			</span>
-		),
-	},
-	{
-		header: "Cost",
-		accessorKey: "cost",
-		cell: (row) => (
-			<span className="text-gray-600">
-				{row.cost != null ? formatCurrency(row.cost) : "NA"}
-			</span>
-		),
-	},
-	{
-		header: "Status",
-		accessorKey: "status",
-		cell: (row) => {
-			const variant = statusBadge[row.status?.toLowerCase()] ?? "gray";
-			return <Badge variant={variant}>{row.status}</Badge>;
+function buildColumns(
+	onMarkDelivered?: (orderId: string) => void,
+): Column<OrderByDateItem>[] {
+	return [
+		{
+			header: "Order ID",
+			accessorKey: "id",
+			cell: (row) => (
+				<span className="font-mono text-xs font-medium text-gray-900">
+					#{String(row.id).slice(0, 8)}
+				</span>
+			),
 		},
-	},
-];
+		{
+			header: "Customer",
+			accessorKey: "customerName",
+			cell: (row) => <span className="text-gray-700">{row.customerName}</span>,
+		},
+		{
+			header: "Items",
+			accessorKey: "items",
+			cell: (row) => (
+				<span className="text-gray-600 text-xs">
+					{Array.isArray(row.items) && row.items.length
+						? row.items
+								.map((item) =>
+									typeof item === "string"
+										? item
+										: (item as { name: string }).name,
+								)
+								.join(", ")
+						: "—"}
+				</span>
+			),
+		},
+		{
+			header: "Total",
+			accessorKey: "total",
+			cell: (row) => (
+				<span className="font-medium text-gray-900">
+					{row.total != null ? formatCurrency(row.total) : "—"}
+				</span>
+			),
+		},
+		{
+			header: "Cost",
+			accessorKey: "cost",
+			cell: (row) => (
+				<span className="text-gray-600">
+					{row.cost != null ? formatCurrency(row.cost) : "NA"}
+				</span>
+			),
+		},
+		{
+			header: "Status",
+			accessorKey: "status",
+			cell: (row) => {
+				const cs = effectiveStatus(row);
+				const isMissed = cs === "missed";
+
+				if (isMissed) {
+					return (
+						<div className="flex items-center gap-2">
+							<Badge variant="red" className="ring-1 ring-red-300">
+								Missed
+							</Badge>
+							{onMarkDelivered && (
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										onMarkDelivered(row.id);
+									}}
+									className="text-[11px] font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-full px-2 py-0.5 transition whitespace-nowrap"
+									title="Delivery was not marked earlier"
+								>
+									Mark Delivered
+								</button>
+							)}
+						</div>
+					);
+				}
+
+				const variant = statusBadge[cs] ?? "gray";
+				return (
+					<Badge variant={variant}>{row.computedStatus ?? row.status}</Badge>
+				);
+			},
+		},
+	];
+}
 
 /* -- Component ---------------------------------------------------- */
 
-export default function OrdersByDateSection() {
+interface OrdersByDateSectionProps {
+	onMarkDelivered?: (orderId: string) => void;
+}
+
+export default function OrdersByDateSection({
+	onMarkDelivered,
+}: OrdersByDateSectionProps) {
 	const { data, isLoading, isError } = useOrdersByDate();
 	const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
@@ -167,14 +210,17 @@ export default function OrdersByDateSection() {
 									onClick={() => toggleDate(group.date)}
 									className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
 								>
-						<span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-									{formatDate(group.date)}
-									{isToday(group.date) && (
-										<Badge variant="green" className="text-[10px] px-1.5 py-0">
-											Today
-										</Badge>
-									)}
-									<span className="text-xs font-normal text-gray-400">
+									<span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+										{formatDate(group.date)}
+										{isToday(group.date) && (
+											<Badge
+												variant="green"
+												className="text-[10px] px-1.5 py-0"
+											>
+												Today
+											</Badge>
+										)}
+										<span className="text-xs font-normal text-gray-400">
 											({group.orders.length} order
 											{group.orders.length !== 1 ? "s" : ""})
 										</span>
@@ -197,10 +243,13 @@ export default function OrdersByDateSection() {
 								{isExpanded && (
 									<div className="px-2 pb-2">
 										<DataTable
-											columns={columns}
+											columns={buildColumns(onMarkDelivered)}
 											data={group.orders}
 											keyExtractor={(o) => o.id}
 											emptyMessage="No orders for this date."
+											rowClassName={(row) =>
+												effectiveStatus(row) === "missed" ? "bg-red-50/50" : ""
+											}
 										/>
 									</div>
 								)}

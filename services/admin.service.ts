@@ -73,3 +73,18 @@ export async function getOrdersByDate(): Promise<OrdersByDateGroup[]> {
 		throw new Error(`Failed to fetch orders by date (${res.status})`);
 	return res.json();
 }
+
+/**
+ * Mark an order as delivered.
+ * PATCH /orders/:id/mark-delivered
+ */
+export async function markOrderDelivered(
+	orderId: string,
+): Promise<{ success: boolean }> {
+	const res = await fetch(`${API_BASE}/orders/${orderId}/mark-delivered`, {
+		method: "PATCH",
+	});
+	if (!res.ok)
+		throw new Error(`Failed to mark order as delivered (${res.status})`);
+	return res.json();
+}

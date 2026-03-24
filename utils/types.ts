@@ -142,7 +142,8 @@ export type OrderStatus =
 	| "confirmed"
 	| "processing"
 	| "delivered"
-	| "cancelled";
+	| "cancelled"
+	| "missed";
 
 export interface AdminOrderItem {
 	name: string;
@@ -246,6 +247,7 @@ export interface UpcomingDelivery {
 	total?: number;
 	date: string;
 	status: string;
+	computedStatus?: string;
 }
 
 // -- Vegetable Pricing ----------------------------------------------
@@ -268,6 +270,7 @@ export interface OrderByDateItem {
 	total: number;
 	cost: number | null;
 	status: string;
+	computedStatus?: string;
 }
 
 export interface OrdersByDateGroup {

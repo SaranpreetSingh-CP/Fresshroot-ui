@@ -24,8 +24,11 @@ interface DataTableProps<T> {
 	/** Show when data is empty */
 	emptyMessage?: string;
 	/** Extra classes on the wrapper div */
-	className?: string; /** Called when a row is clicked */
+	className?: string;
+	/** Called when a row is clicked */
 	onRowClick?: (row: T) => void;
+	/** Per-row class name function */
+	rowClassName?: (row: T) => string;
 }
 
 export default function DataTable<T>({
@@ -36,6 +39,7 @@ export default function DataTable<T>({
 	emptyMessage = "No data available.",
 	className,
 	onRowClick,
+	rowClassName,
 }: DataTableProps<T>) {
 	return (
 		<div className={cn("overflow-auto", className)}>
@@ -71,11 +75,12 @@ export default function DataTable<T>({
 							<tr
 								key={keyExtractor(row, idx)}
 								onClick={onRowClick ? () => onRowClick(row) : undefined}
-								className={
+								className={cn(
 									onRowClick
 										? "cursor-pointer hover:bg-gray-50 transition-colors"
-										: undefined
-								}
+										: undefined,
+									rowClassName?.(row),
+								)}
 							>
 								{columns.map((col, i) => (
 									<td

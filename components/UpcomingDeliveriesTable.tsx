@@ -27,8 +27,9 @@ function isToday(raw: string): boolean {
 	return raw?.slice(0, 10) === todayISO();
 }
 
-function formatCurrency(value: number): string {
-	return `₹${value.toLocaleString("en-IN")}`;
+/** Get the effective status - prefer computedStatus over status */
+function effectiveStatus(row: UpcomingDelivery): string {
+	return (row.computedStatus ?? row.status ?? "").toLowerCase();
 }
 
 const statusBadge: Record<string, "green" | "amber" | "blue" | "red" | "gray"> =
@@ -41,6 +42,7 @@ const statusBadge: Record<string, "green" | "amber" | "blue" | "red" | "gray"> =
 		confirmed: "blue",
 		processing: "blue",
 		cancelled: "red",
+		missed: "red",
 	};
 
 const statusOptions: { value: OrderStatus; label: string }[] = [
@@ -57,6 +59,7 @@ const statusSelectColor: Record<string, string> = {
 	processing: "bg-blue-50 text-blue-700 border-blue-200",
 	pending: "bg-amber-50 text-amber-700 border-amber-200",
 	cancelled: "bg-red-50 text-red-700 border-red-200",
+	missed: "bg-red-50 text-red-700 border-red-200",
 };
 
 /* -- Columns builder ---------------------------------------------- */
@@ -65,6 +68,7 @@ function buildColumns(
 	onStatusChange?: (orderId: string, status: OrderStatus) => void,
 	onEdit?: (row: UpcomingDelivery) => void,
 	onDelete?: (orderId: string) => void,
+	onMarkDelivered?: (orderId: string) => void,
 ): Column<UpcomingDelivery>[] {
 	const cols: Column<UpcomingDelivery>[] = [
 		{
@@ -116,13 +120,15 @@ function buildColumns(
 			header: "Status",
 			accessorKey: "status",
 			cell: (row) => {
-				if (onStatusChange) {
+				const cs = effectiveStatus(row);
+				const isMissed = cs === "missed";
+
+				if (onStatusChange && !isMissed) {
 					const colorCls =
-						statusSelectColor[row.status?.toLowerCase()] ??
-						"bg-gray-50 text-gray-700 border-gray-200";
+						statusSelectColor[cs] ?? "bg-gray-50 text-gray-700 border-gray-200";
 					return (
 						<select
-							value={row.status?.toLowerCase() ?? "pending"}
+							value={cs}
 							onChange={(e) =>
 								onStatusChange(row.id, e.target.value as OrderStatus)
 							}
@@ -141,8 +147,33 @@ function buildColumns(
 						</select>
 					);
 				}
-				const variant = statusBadge[row.status?.toLowerCase()] ?? "gray";
-				return <Badge variant={variant}>{row.status}</Badge>;
+
+				if (isMissed) {
+					return (
+						<div className="flex items-center gap-2">
+							<Badge variant="red" className="ring-1 ring-red-300">
+								Missed
+							</Badge>
+							{onMarkDelivered && (
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										onMarkDelivered(row.id);
+									}}
+									className="text-[11px] font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-full px-2 py-0.5 transition whitespace-nowrap"
+									title="Delivery was not marked earlier"
+								>
+									Mark Delivered
+								</button>
+							)}
+						</div>
+					);
+				}
+
+				const variant = statusBadge[cs] ?? "gray";
+				return (
+					<Badge variant={variant}>{row.computedStatus ?? row.status}</Badge>
+				);
 			},
 		},
 	];
@@ -190,6 +221,7 @@ interface UpcomingDeliveriesTableProps {
 	onStatusChange?: (orderId: string, status: OrderStatus) => void;
 	onEdit?: (row: UpcomingDelivery) => void;
 	onDelete?: (orderId: string) => void;
+	onMarkDelivered?: (orderId: string) => void;
 }
 
 export default function UpcomingDeliveriesTable({
@@ -197,6 +229,7 @@ export default function UpcomingDeliveriesTable({
 	onStatusChange,
 	onEdit,
 	onDelete,
+	onMarkDelivered,
 }: UpcomingDeliveriesTableProps) {
 	const { data, isLoading, isError } = useUpcomingDeliveries();
 
@@ -207,7 +240,12 @@ export default function UpcomingDeliveriesTable({
 			)
 		: [];
 
-	const columns = buildColumns(onStatusChange, onEdit, onDelete);
+	const columns = buildColumns(
+		onStatusChange,
+		onEdit,
+		onDelete,
+		onMarkDelivered,
+	);
 
 	return (
 		<Card>
@@ -246,6 +284,9 @@ export default function UpcomingDeliveriesTable({
 					keyExtractor={(d) => d.id}
 					emptyMessage="No upcoming deliveries."
 					className="max-h-96"
+					rowClassName={(row) =>
+						effectiveStatus(row) === "missed" ? "bg-red-50/50" : ""
+					}
 				/>
 			)}
 		</Card>

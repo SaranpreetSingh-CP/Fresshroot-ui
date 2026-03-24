@@ -27,6 +27,7 @@ import {
 	getVegetablePrices,
 	setVegetablePrices,
 	getOrdersByDate,
+	markOrderDelivered,
 } from "@/services/admin.service";
 import type {
 	CustomerFormData,
@@ -253,5 +254,18 @@ export function useOrdersByDate() {
 		queryKey: ["ordersByDate"],
 		queryFn: getOrdersByDate,
 		staleTime: 1000 * 60 * 2,
+	});
+}
+
+/* -- Mark Order Delivered ----------------------------------------- */
+export function useMarkDelivered() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (orderId: string) => markOrderDelivered(orderId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["upcomingDeliveries"] });
+			queryClient.invalidateQueries({ queryKey: ["ordersByDate"] });
+			queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
+		},
 	});
 }
