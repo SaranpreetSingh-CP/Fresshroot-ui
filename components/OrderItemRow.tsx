@@ -67,15 +67,24 @@ export default function OrderItemRow({
 					/>
 				</div>
 
-				{/* Unit (auto-filled, read-only indicator) */}
+				{/* Unit (selectable) */}
 				<div className="w-24 flex-shrink-0">
 					<div className="space-y-1">
-						<label className="block text-sm font-medium text-gray-700">
+						<label
+							htmlFor={`unit-${index}`}
+							className="block text-sm font-medium text-gray-700"
+						>
 							Unit
 						</label>
-						<div className="flex h-[38px] items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-600">
-							{selectedVeg?.unit ?? item.unit}
-						</div>
+						<select
+							id={`unit-${index}`}
+							value={item.unit}
+							onChange={(e) => onUpdate(index, "unit", e.target.value)}
+							className="flex h-[38px] w-full items-center rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+						>
+							<option value="kg">kg</option>
+							<option value="piece">piece</option>
+						</select>
 					</div>
 				</div>
 
