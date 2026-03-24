@@ -37,6 +37,11 @@ export default function CustomersTable({
 			),
 		},
 		{
+			header: "Phone",
+			accessorKey: "phone",
+			cell: (row) => <span className="text-gray-600">{row.phone ?? "-"}</span>,
+		},
+		{
 			header: "Email",
 			accessorKey: "email",
 			cell: (row) => <span className="text-gray-600">{row.email ?? "—"}</span>,
