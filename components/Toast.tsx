@@ -9,7 +9,7 @@ import {
 } from "react";
 import { cn } from "@/utils/cn";
 
-/* ── Types ──────────────────────────────────────────────────────── */
+/* -- Types -------------------------------------------------------- */
 type ToastVariant = "success" | "error" | "info";
 
 interface Toast {
@@ -30,7 +30,7 @@ export function useToast() {
 	return ctx;
 }
 
-/* ── Variant styles ─────────────────────────────────────────────── */
+/* -- Variant styles ----------------------------------------------- */
 const variantStyles: Record<ToastVariant, string> = {
 	success: "bg-green-600 text-white",
 	error: "bg-red-600 text-white",
@@ -43,7 +43,7 @@ const icons: Record<ToastVariant, string> = {
 	info: "ℹ",
 };
 
-/* ── Provider ───────────────────────────────────────────────────── */
+/* -- Provider ----------------------------------------------------- */
 let nextId = 0;
 
 export default function ToastProvider({ children }: { children: ReactNode }) {

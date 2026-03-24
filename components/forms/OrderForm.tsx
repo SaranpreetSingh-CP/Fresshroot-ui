@@ -8,7 +8,7 @@ import { useVegetables } from "@/hooks/useVegetables";
 import type { Vegetable } from "@/services/vegetable.service";
 import type { OrderItemInput, OrderFormData, OrderStatus } from "@/utils/types";
 
-/* ── Helpers ────────────────────────────────────────────────────── */
+/* -- Helpers ------------------------------------------------------ */
 
 const ORDER_STATUSES: { value: OrderStatus; label: string }[] = [
 	{ value: "pending", label: "Pending" },
@@ -28,7 +28,7 @@ const emptyRow: ItemRow = {
 	unit: "kg",
 };
 
-/* ── Props ──────────────────────────────────────────────────────── */
+/* -- Props -------------------------------------------------------- */
 
 interface OrderFormProps {
 	customers: { value: string; label: string }[];
@@ -42,7 +42,7 @@ interface OrderFormProps {
 	isSubmitting?: boolean;
 }
 
-/* ── Component ──────────────────────────────────────────────────── */
+/* -- Component ---------------------------------------------------- */
 
 export default function OrderForm({
 	customers,
@@ -65,7 +65,7 @@ export default function OrderForm({
 		items?: string;
 	}>({});
 
-	/* ── Row helpers ─────────────────────────────────────────── */
+	/* -- Row helpers ------------------------------------------- */
 
 	function addItem() {
 		setRows((prev) => [...prev, { ...emptyRow }]);
@@ -100,7 +100,7 @@ export default function OrderForm({
 		});
 	}
 
-	/* ── Validation ──────────────────────────────────────────── */
+	/* -- Validation -------------------------------------------- */
 
 	function validate(): boolean {
 		const e: typeof errors = {};
@@ -112,7 +112,7 @@ export default function OrderForm({
 		return Object.keys(e).length === 0;
 	}
 
-	/* ── Submit ──────────────────────────────────────────────── */
+	/* -- Submit ------------------------------------------------ */
 
 	function handleSubmit(ev: FormEvent) {
 		ev.preventDefault();

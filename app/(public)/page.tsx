@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
 	return (
 		<>
-			{/* ── Hero ─────────────────────────────────────────────────── */}
+			{/* -- Hero --------------------------------------------------- */}
 			<section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-amber-50">
 				<div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
 					<div className="max-w-3xl">
@@ -52,7 +52,7 @@ export default function HomePage() {
 				<div className="pointer-events-none absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-amber-200/30" />
 			</section>
 
-			{/* ── Soil to Fork Section ─────────────────────────────────── */}
+			{/* -- Soil to Fork Section ----------------------------------- */}
 			<section className="bg-white py-20">
 				<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 					<div className="text-center">
@@ -107,7 +107,7 @@ export default function HomePage() {
 				</div>
 			</section>
 
-			{/* ── Kitchen Garden Section ───────────────────────────────── */}
+			{/* -- Kitchen Garden Section --------------------------------- */}
 			<section className="bg-green-50 py-20">
 				<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 					<div className="grid items-center gap-12 lg:grid-cols-2">
@@ -152,7 +152,7 @@ export default function HomePage() {
 				</div>
 			</section>
 
-			{/* ── Testimonials ─────────────────────────────────────────── */}
+			{/* -- Testimonials ------------------------------------------- */}
 			<section className="bg-white py-20">
 				<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 					<h2 className="text-center text-3xl font-bold text-gray-900">
@@ -164,7 +164,7 @@ export default function HomePage() {
 				</div>
 			</section>
 
-			{/* ── CTA ──────────────────────────────────────────────────── */}
+			{/* -- CTA ---------------------------------------------------- */}
 			<section className="bg-green-700 py-20 text-center text-white">
 				<div className="mx-auto max-w-3xl px-4">
 					<h2 className="text-3xl font-bold">Ready to Go Fresh?</h2>

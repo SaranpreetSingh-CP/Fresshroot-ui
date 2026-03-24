@@ -20,8 +20,10 @@ import {
 import { useToast } from "@/components/Toast";
 import AdminSummaryCards from "@/components/AdminSummaryCards";
 import CustomersTable from "@/components/CustomersTable";
-import OrdersTable from "@/components/OrdersTable";
 import ExpenseTable from "@/components/ExpenseTable";
+import UpcomingDeliveriesTable from "@/components/UpcomingDeliveriesTable";
+import PricingForm from "@/components/PricingForm";
+import OrdersByDateSection from "@/components/OrdersByDateSection";
 import { DashboardSkeleton } from "@/components/Skeleton";
 import Modal from "@/components/Modal";
 import CustomerForm from "@/components/forms/CustomerForm";
@@ -83,7 +85,7 @@ export default function AdminDashboard() {
 		setEditExpenseTarget(null);
 	}
 
-	/* ── Handlers ─────────────────────────────────────────────── */
+	/* -- Handlers ----------------------------------------------- */
 
 	function handleCreateCustomer(formData: CustomerFormData) {
 		createCustomer.mutate(formData, {
@@ -221,7 +223,7 @@ export default function AdminDashboard() {
 		setOpenModal("editCustomer");
 	}
 
-	/* ── Customer dropdown options for OrderForm ──────────────── */
+	/* -- Customer dropdown options for OrderForm ---------------- */
 	const customerOptions = (customersList ?? data?.customers ?? []).map(
 		(c: { id?: string; name: string }) => ({
 			value: String(c.id ?? c.name),
@@ -229,7 +231,7 @@ export default function AdminDashboard() {
 		}),
 	);
 
-	/* ── Loading / Error states ───────────────────────────────── */
+	/* -- Loading / Error states --------------------------------- */
 
 	if (isLoading) return <DashboardSkeleton />;
 
@@ -271,7 +273,7 @@ export default function AdminDashboard() {
 					</p>
 				</div>
 
-				{/* ── Quick Stats ──────────────────────────────────────── */}
+				{/* -- Quick Stats ---------------------------------------- */}
 				<AdminSummaryCards
 					totalCustomers={data.summary.totalCustomers}
 					activeCustomers={data.summary.activeCustomers}
@@ -279,7 +281,32 @@ export default function AdminDashboard() {
 					expenses={data.summary.expenses}
 				/>
 
-				{/* ── Customer List ────────────────────────────────────── */}
+				{/* -- Upcoming Deliveries -------------------------------- */}
+				<section id="upcoming-deliveries">
+					<UpcomingDeliveriesTable
+						onAdd={() => setOpenModal("addOrder")}
+						onStatusChange={handleStatusChange}
+						onEdit={(row) =>
+							handleEditOrder({
+								id: row.id,
+								customerId: 0,
+								customerName: row.customerName,
+								items: row.items as AdminOrder["items"],
+								total: row.total,
+								status: row.status as AdminOrder["status"],
+								date: row.date,
+							})
+						}
+						onDelete={handleDeleteOrder}
+					/>
+				</section>
+
+				{/* -- Set Vegetable Prices ------------------------------- */}
+				<section id="pricing">
+					<PricingForm />
+				</section>
+
+				{/* -- Customer List -------------------------------------- */}
 				<section id="customers">
 					<CustomersTable
 						customers={data.customers}
@@ -288,18 +315,7 @@ export default function AdminDashboard() {
 					/>
 				</section>
 
-				{/* ── Orders Table ─────────────────────────────────────── */}
-				<section id="orders">
-					<OrdersTable
-						orders={data.orders}
-						onAdd={() => setOpenModal("addOrder")}
-						onEdit={handleEditOrder}
-						onDelete={handleDeleteOrder}
-						onStatusChange={handleStatusChange}
-					/>
-				</section>
-
-				{/* ── Expense Tracker ──────────────────────────────────── */}
+				{/* -- Expense Tracker ------------------------------------ */}
 				<section id="expenses">
 					<ExpenseTable
 						expenses={expensesList ?? data.expenses}
@@ -308,9 +324,14 @@ export default function AdminDashboard() {
 						onEdit={handleEditExpense}
 					/>
 				</section>
+
+				{/* -- All Deliveries (Orders by Date) ------------------- */}
+				<section id="all-deliveries">
+					<OrdersByDateSection />
+				</section>
 			</div>
 
-			{/* ── Modals ──────────────────────────────────────────────── */}
+			{/* -- Modals ------------------------------------------------ */}
 
 			<Modal
 				open={openModal === "addCustomer"}

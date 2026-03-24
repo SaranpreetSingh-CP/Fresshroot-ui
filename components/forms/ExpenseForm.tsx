@@ -175,7 +175,7 @@ export default function ExpenseForm({
 				</div>
 			</div>
 
-			{/* ── File Section ─────────────────────────────────────── */}
+			{/* -- File Section --------------------------------------- */}
 			<div className="space-y-3">
 				{/* Show existing file when editing and billUrl exists */}
 				{hasBill && !file && (

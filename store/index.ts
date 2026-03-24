@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import type { BookingFormData, Subscription, Delivery } from "@/utils/types";
 
-// ── UI Store ───────────────────────────────────────────────────────
+// -- UI Store -------------------------------------------------------
 interface UIState {
 	mobileMenuOpen: boolean;
 	toggleMobileMenu: () => void;
@@ -16,7 +16,7 @@ export const useUIStore = create<UIState>((set) => ({
 	closeMobileMenu: () => set({ mobileMenuOpen: false }),
 }));
 
-// ── Customer Store ─────────────────────────────────────────────────
+// -- Customer Store -------------------------------------------------
 interface CustomerState {
 	subscriptions: Subscription[];
 	deliveries: Delivery[];
@@ -31,7 +31,7 @@ export const useCustomerStore = create<CustomerState>((set) => ({
 	setDeliveries: (deliveries) => set({ deliveries }),
 }));
 
-// ── Booking Store ──────────────────────────────────────────────────
+// -- Booking Store --------------------------------------------------
 interface BookingState {
 	formData: BookingFormData;
 	setField: <K extends keyof BookingFormData>(

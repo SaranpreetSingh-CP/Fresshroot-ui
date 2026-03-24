@@ -5,7 +5,7 @@ import type {
 	SelectHTMLAttributes,
 } from "react";
 
-/* ── Input ──────────────────────────────────────────────────────── */
+/* -- Input -------------------------------------------------------- */
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 	label: string;
 }
@@ -28,7 +28,7 @@ export function Input({ label, id, className, ...props }: InputProps) {
 	);
 }
 
-/* ── Textarea ───────────────────────────────────────────────────── */
+/* -- Textarea ----------------------------------------------------- */
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 	label: string;
 }
@@ -52,7 +52,7 @@ export function Textarea({ label, id, className, ...props }: TextareaProps) {
 	);
 }
 
-/* ── Select ─────────────────────────────────────────────────────── */
+/* -- Select ------------------------------------------------------- */
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 	label: string;
 	options: { value: string; label: string }[];

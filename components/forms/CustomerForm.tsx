@@ -119,7 +119,7 @@ export default function CustomerForm({
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-6">
-			{/* ── Section: Customer Details ─────────────────────────── */}
+			{/* -- Section: Customer Details --------------------------- */}
 			<fieldset className="space-y-4">
 				<legend className="text-sm font-semibold uppercase tracking-wide text-gray-500">
 					Customer Details
@@ -183,7 +183,7 @@ export default function CustomerForm({
 				</div>
 			</fieldset>
 
-			{/* ── Section: Plan Details (toggle) ───────────────────── */}
+			{/* -- Section: Plan Details (toggle) --------------------- */}
 			<div className="border-t border-gray-100 pt-4">
 				<label className="flex cursor-pointer items-center gap-3">
 					<div className="relative">
@@ -217,7 +217,7 @@ export default function CustomerForm({
 				)}
 			</div>
 
-			{/* ── Submit ───────────────────────────────────────────── */}
+			{/* -- Submit --------------------------------------------- */}
 			<div className="flex justify-end border-t border-gray-100 pt-4">
 				<Button type="submit" disabled={isSubmitting}>
 					{isSubmitting

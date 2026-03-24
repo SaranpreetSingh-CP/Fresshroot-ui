@@ -22,15 +22,22 @@ import {
 	getExpenseById,
 } from "@/services/expense.service";
 import { updateDeliveryStatus } from "@/services/delivery.service";
+import {
+	getUpcomingDeliveries,
+	getVegetablePrices,
+	setVegetablePrices,
+	getOrdersByDate,
+} from "@/services/admin.service";
 import type {
 	CustomerFormData,
 	OrderFormData,
 	ExpenseFormData,
 	DeliveryStatus,
 	OrderStatus,
+	SetPricesPayload,
 } from "@/utils/types";
 
-/* ── Customers List (for dropdowns) ─────────────────────────────── */
+/* -- Customers List (for dropdowns) ------------------------------- */
 export function useCustomersList() {
 	return useQuery({
 		queryKey: ["customers"],
@@ -39,7 +46,7 @@ export function useCustomersList() {
 	});
 }
 
-/* ── Create Customer ────────────────────────────────────────────── */
+/* -- Create Customer ---------------------------------------------- */
 export function useCreateCustomer() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -51,7 +58,7 @@ export function useCreateCustomer() {
 	});
 }
 
-/* ── Update Customer ────────────────────────────────────────────── */
+/* -- Update Customer ---------------------------------------------- */
 export function useUpdateCustomer() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -69,7 +76,7 @@ export function useUpdateCustomer() {
 	});
 }
 
-/* ── Create Order ───────────────────────────────────────────────── */
+/* -- Create Order ------------------------------------------------- */
 export function useCreateOrder() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -81,7 +88,7 @@ export function useCreateOrder() {
 	});
 }
 
-/* ── Update Order ───────────────────────────────────────────────── */
+/* -- Update Order ------------------------------------------------- */
 export function useUpdateOrder() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -94,7 +101,7 @@ export function useUpdateOrder() {
 	});
 }
 
-/* ── Update Order Status (inline) ───────────────────────────────── */
+/* -- Update Order Status (inline) --------------------------------- */
 export function useUpdateOrderStatus() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -107,7 +114,7 @@ export function useUpdateOrderStatus() {
 	});
 }
 
-/* ── Delete Order ───────────────────────────────────────────────── */
+/* -- Delete Order ------------------------------------------------- */
 export function useDeleteOrder() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -119,7 +126,7 @@ export function useDeleteOrder() {
 	});
 }
 
-/* ── Order Detail (for edit) ────────────────────────────────────── */
+/* -- Order Detail (for edit) -------------------------------------- */
 export function useOrderDetail(id: string | null) {
 	return useQuery({
 		queryKey: ["order", id],
@@ -129,7 +136,7 @@ export function useOrderDetail(id: string | null) {
 	});
 }
 
-/* ── Expenses List (full objects with ids) ───────────────────────── */
+/* -- Expenses List (full objects with ids) ------------------------- */
 export function useExpensesList() {
 	return useQuery({
 		queryKey: ["expenses"],
@@ -138,7 +145,7 @@ export function useExpensesList() {
 	});
 }
 
-/* ── Create Expense ─────────────────────────────────────────────── */
+/* -- Create Expense ----------------------------------------------- */
 export function useCreateExpense() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -150,7 +157,7 @@ export function useCreateExpense() {
 	});
 }
 
-/* ── Update Expense ──────────────────────────────────────────────── */
+/* -- Update Expense ------------------------------------------------ */
 export function useUpdateExpense() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -168,7 +175,7 @@ export function useUpdateExpense() {
 	});
 }
 
-/* ── Expense Detail (for edit) ───────────────────────────────────── */
+/* -- Expense Detail (for edit) ------------------------------------- */
 export function useExpenseDetail(id: string | null) {
 	return useQuery({
 		queryKey: ["expense", id],
@@ -178,7 +185,7 @@ export function useExpenseDetail(id: string | null) {
 	});
 }
 
-/* ── Customer Detail (for edit) ──────────────────────────────────── */
+/* -- Customer Detail (for edit) ------------------------------------ */
 export function useCustomerDetail(id: string | null) {
 	return useQuery({
 		queryKey: ["customer", id],
@@ -187,7 +194,7 @@ export function useCustomerDetail(id: string | null) {
 		staleTime: 0,
 	});
 }
-/* ── Customer Details Page (profile + subscriptions + orders) ──── */
+/* -- Customer Details Page (profile + subscriptions + orders) ---- */
 export function useCustomerDetails(id: string) {
 	return useQuery({
 		queryKey: ["customerDetails", id],
@@ -195,7 +202,7 @@ export function useCustomerDetails(id: string) {
 		enabled: !!id,
 	});
 }
-/* ── Update Delivery Status ─────────────────────────────────────── */
+/* -- Update Delivery Status --------------------------------------- */
 export function useUpdateDeliveryStatus() {
 	const queryClient = useQueryClient();
 	return useMutation({
@@ -205,5 +212,46 @@ export function useUpdateDeliveryStatus() {
 			queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
 			queryClient.invalidateQueries({ queryKey: ["customerDashboard"] });
 		},
+	});
+}
+
+/* -- Upcoming Deliveries ------------------------------------------ */
+export function useUpcomingDeliveries() {
+	return useQuery({
+		queryKey: ["upcomingDeliveries"],
+		queryFn: getUpcomingDeliveries,
+		staleTime: 1000 * 60 * 2,
+	});
+}
+
+/* -- Vegetable Prices --------------------------------------------- */
+export function useVegetablePrices(date: string) {
+	return useQuery({
+		queryKey: ["vegetablePrices", date],
+		queryFn: () => getVegetablePrices(date),
+		enabled: !!date,
+	});
+}
+
+/* -- Set Vegetable Prices ----------------------------------------- */
+export function useSetVegetablePrices() {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: SetPricesPayload) => setVegetablePrices(payload),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["vegetablePrices"] });
+			queryClient.invalidateQueries({ queryKey: ["ordersByDate"] });
+			queryClient.invalidateQueries({ queryKey: ["upcomingDeliveries"] });
+			queryClient.invalidateQueries({ queryKey: ["adminDashboard"] });
+		},
+	});
+}
+
+/* -- Orders By Date ----------------------------------------------- */
+export function useOrdersByDate() {
+	return useQuery({
+		queryKey: ["ordersByDate"],
+		queryFn: getOrdersByDate,
+		staleTime: 1000 * 60 * 2,
 	});
 }

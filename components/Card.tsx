@@ -23,7 +23,7 @@ export default function Card({ className, children, highlight }: CardProps) {
 	);
 }
 
-/* ── Sub-components ─────────────────────────────────────────────── */
+/* -- Sub-components ----------------------------------------------- */
 
 export function CardHeader({
 	children,

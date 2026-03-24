@@ -8,7 +8,7 @@ import type {
 	Expense,
 } from "./types";
 
-// ── STF Subscription Plans ─────────────────────────────────────────
+// -- STF Subscription Plans -----------------------------------------
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 	{
 		id: "plan-1pax",
@@ -64,7 +64,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 	},
 ];
 
-// ── Kitchen Garden Packages ────────────────────────────────────────
+// -- Kitchen Garden Packages ----------------------------------------
 export const GARDEN_PACKAGES: GardenPackage[] = [
 	{
 		id: "grow-bag",
@@ -122,7 +122,7 @@ export const GARDEN_PACKAGES: GardenPackage[] = [
 	},
 ];
 
-// ── Customer Dashboard Mock ────────────────────────────────────────
+// -- Customer Dashboard Mock ----------------------------------------
 export const MOCK_SUBSCRIPTIONS: Subscription[] = [
 	{
 		id: "sub-1",
@@ -161,7 +161,7 @@ export const MOCK_DELIVERIES: Delivery[] = [
 	},
 ];
 
-// ── Admin Dashboard Mock ───────────────────────────────────────────
+// -- Admin Dashboard Mock -------------------------------------------
 export const MOCK_CUSTOMERS: Customer[] = [
 	{
 		id: "cust-1",
@@ -255,7 +255,7 @@ export const MOCK_EXPENSES: Expense[] = [
 	},
 ];
 
-// ── Testimonials ───────────────────────────────────────────────────
+// -- Testimonials ---------------------------------------------------
 export const TESTIMONIALS = [
 	{
 		id: "t-1",

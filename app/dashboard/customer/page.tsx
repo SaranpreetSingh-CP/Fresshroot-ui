@@ -51,7 +51,7 @@ export default function CustomerDashboard() {
 		setOpenModal(null);
 	}
 
-	/* ── Handlers ─────────────────────────────────────────────── */
+	/* -- Handlers ----------------------------------------------- */
 
 	function handleCreateOrder(items: OrderItemInput[]) {
 		createOrder.mutate(items, {
@@ -81,7 +81,7 @@ export default function CustomerDashboard() {
 		});
 	}
 
-	/* ── States ───────────────────────────────────────────────── */
+	/* -- States ------------------------------------------------- */
 
 	if (isLoading) return <DashboardSkeleton />;
 
@@ -111,7 +111,7 @@ export default function CustomerDashboard() {
 		);
 	}
 
-	/* ── Chat view ────────────────────────────────────────────── */
+	/* -- Chat view ---------------------------------------------- */
 	if (activeTicketId) {
 		return (
 			<div className="space-y-4">
@@ -126,7 +126,7 @@ export default function CustomerDashboard() {
 	return (
 		<>
 			<div className="space-y-10">
-				{/* ── Header + Quick Actions ─────────────────────────── */}
+				{/* -- Header + Quick Actions --------------------------- */}
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<div>
 						<h1 className="text-2xl font-bold text-gray-900">
@@ -140,14 +140,14 @@ export default function CustomerDashboard() {
 					<QuickActions phone={SUPPORT_PHONE} />
 				</div>
 
-				{/* ── Quick Stats ──────────────────────────────────────── */}
+				{/* -- Quick Stats ---------------------------------------- */}
 				<SummaryCards
 					activePlans={data.activePlans}
 					upcomingDeliveries={data.upcomingDeliveries}
 					itemsDelivered={data.itemsDelivered}
 				/>
 
-				{/* ── Action buttons ───────────────────────────────────── */}
+				{/* -- Action buttons ------------------------------------- */}
 				<div className="flex flex-wrap gap-3">
 					<button
 						onClick={() => setOpenModal("createOrder")}
@@ -163,7 +163,7 @@ export default function CustomerDashboard() {
 					</button>
 				</div>
 
-				{/* ── Subscriptions ────────────────────────────────────── */}
+				{/* -- Subscriptions -------------------------------------- */}
 				<section id="subscriptions">
 					<h2 className="mb-4 text-xl font-bold text-gray-900">
 						My Subscriptions
@@ -184,7 +184,7 @@ export default function CustomerDashboard() {
 					)}
 				</section>
 
-				{/* ── Deliveries ───────────────────────────────────────── */}
+				{/* -- Deliveries ----------------------------------------- */}
 				<section id="deliveries">
 					<h2 className="mb-4 text-xl font-bold text-gray-900">
 						Delivery Status
@@ -192,7 +192,7 @@ export default function CustomerDashboard() {
 					<DeliveryTable deliveries={data.deliveries} />
 				</section>
 
-				{/* ── Support Tickets ──────────────────────────────────── */}
+				{/* -- Support Tickets ------------------------------------ */}
 				{tickets && tickets.length > 0 && (
 					<section id="support">
 						<Card>
@@ -229,7 +229,7 @@ export default function CustomerDashboard() {
 				)}
 			</div>
 
-			{/* ── Modals ──────────────────────────────────────────────── */}
+			{/* -- Modals ------------------------------------------------ */}
 
 			<Modal
 				open={openModal === "createOrder"}

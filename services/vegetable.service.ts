@@ -1,6 +1,6 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
-/* ── Types ──────────────────────────────────────────────────────── */
+/* -- Types -------------------------------------------------------- */
 export interface Vegetable {
 	id: number;
 	name: string;
@@ -10,7 +10,7 @@ export interface Vegetable {
 	available?: boolean;
 }
 
-/* ── API ────────────────────────────────────────────────────────── */
+/* -- API ---------------------------------------------------------- */
 
 /** GET /vegetables/available — Fetch currently available vegetables */
 export async function getAvailableVegetables(): Promise<Vegetable[]> {

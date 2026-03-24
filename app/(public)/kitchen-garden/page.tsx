@@ -119,7 +119,7 @@ function PackageTable({ pkg }: { pkg: GardenPackage }) {
 export default function KitchenGardenPage() {
 	return (
 		<>
-			{/* ── Header ──────────────────────────────────────────────── */}
+			{/* -- Header ------------------------------------------------ */}
 			<section className="bg-gradient-to-b from-green-50 to-white py-20">
 				<div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
 					<div className="text-center">
@@ -132,7 +132,7 @@ export default function KitchenGardenPage() {
 						</p>
 					</div>
 
-					{/* ── Package Tables ──────────────────────────────────── */}
+					{/* -- Package Tables ------------------------------------ */}
 					<div className="mt-16 space-y-12">
 						{GARDEN_PACKAGES.map((pkg) => (
 							<PackageTable key={pkg.id} pkg={pkg} />
@@ -147,7 +147,7 @@ export default function KitchenGardenPage() {
 				</div>
 			</section>
 
-			{/* ── Booking Form ────────────────────────────────────────── */}
+			{/* -- Booking Form ------------------------------------------ */}
 			<section id="book" className="bg-white py-20">
 				<div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
 					<h2 className="text-center text-3xl font-bold text-gray-900">

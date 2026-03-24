@@ -11,7 +11,7 @@ import DataTable from "@/components/DataTable";
 import type { Column } from "@/components/DataTable";
 import CustomerDetailLoading from "./loading";
 
-/* ── Helpers ────────────────────────────────────────────────────── */
+/* -- Helpers ------------------------------------------------------ */
 
 function formatDate(raw: string): string {
 	return new Date(raw).toLocaleDateString("en-GB", {
@@ -39,7 +39,7 @@ function orderStatusVariant(s: string): StatusVariant {
 	}
 }
 
-/* ── Order type from API ────────────────────────────────────────── */
+/* -- Order type from API ------------------------------------------ */
 
 interface PastOrder {
 	id: string;
@@ -51,7 +51,7 @@ interface PastOrder {
 	status: string;
 }
 
-/* ── Orders columns ─────────────────────────────────────────────── */
+/* -- Orders columns ----------------------------------------------- */
 
 const orderColumns: Column<PastOrder>[] = [
 	{
@@ -111,7 +111,7 @@ const orderColumns: Column<PastOrder>[] = [
 	},
 ];
 
-/* ── Page Component ─────────────────────────────────────────────── */
+/* -- Page Component ----------------------------------------------- */
 
 export default function CustomerDetailPage({
 	params,

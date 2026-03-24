@@ -1,4 +1,4 @@
-// ── Subscription Plans (STF) ───────────────────────────────────────
+// -- Subscription Plans (STF) ---------------------------------------
 export interface PlanPricing {
 	monthly: number;
 	quarterly: number;
@@ -15,7 +15,7 @@ export interface SubscriptionPlan {
 	popular?: boolean;
 }
 
-// ── Kitchen Garden ─────────────────────────────────────────────────
+// -- Kitchen Garden -------------------------------------------------
 export interface GardenTier {
 	label: string;
 	setupCost?: number;
@@ -42,7 +42,7 @@ export interface BookingFormData {
 	message?: string;
 }
 
-// ── Dashboard ──────────────────────────────────────────────────────
+// -- Dashboard ------------------------------------------------------
 export interface Subscription {
 	id: string;
 	plan: string;
@@ -84,7 +84,7 @@ export interface Expense {
 	date: string;
 }
 
-// ── Customer Dashboard API Response ────────────────────────────────
+// -- Customer Dashboard API Response --------------------------------
 export interface DashboardSubscription {
 	name: string;
 	status: "active" | "paused" | "cancelled";
@@ -113,7 +113,7 @@ export interface CustomerDashboardResponse {
 	deliveries: DashboardDelivery[];
 }
 
-// ── Admin Dashboard API Response ───────────────────────────────────
+// -- Admin Dashboard API Response -----------------------------------
 export interface AdminCustomer {
 	id: string;
 	name: string;
@@ -192,7 +192,7 @@ export interface AdminDashboardResponse {
 	expenses: AdminExpense[];
 }
 
-// ── Form / Mutation Types ──────────────────────────────────────────
+// -- Form / Mutation Types ------------------------------------------
 export interface SubscriptionFormData {
 	type: "STF" | "KG" | "";
 	package: string;
@@ -236,3 +236,41 @@ export type DeliveryStatus =
 	| "in-transit"
 	| "out-for-delivery"
 	| "delivered";
+
+// -- Upcoming Deliveries --------------------------------------------
+export interface UpcomingDelivery {
+	id: string;
+	orderId?: string;
+	customerName: string;
+	items: (string | { name: string; unit?: string; quantity?: number })[];
+	total?: number;
+	date: string;
+	status: string;
+}
+
+// -- Vegetable Pricing ----------------------------------------------
+export interface VegetablePrice {
+	vegetableId: number;
+	name: string;
+	price: number | null;
+}
+
+export interface SetPricesPayload {
+	date: string;
+	prices: { vegetableId: number; price: number }[];
+}
+
+// -- Orders By Date -------------------------------------------------
+export interface OrderByDateItem {
+	id: string;
+	customerName: string;
+	items: (string | { name: string; unit?: string; quantity?: number })[];
+	total: number;
+	cost: number | null;
+	status: string;
+}
+
+export interface OrdersByDateGroup {
+	date: string;
+	orders: OrderByDateItem[];
+}

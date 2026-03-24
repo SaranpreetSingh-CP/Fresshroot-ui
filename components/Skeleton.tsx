@@ -1,6 +1,6 @@
 import { cn } from "@/utils/cn";
 
-/* ── Base Skeleton ──────────────────────────────────────────────── */
+/* -- Base Skeleton ------------------------------------------------ */
 interface SkeletonProps {
 	className?: string;
 }
@@ -11,7 +11,7 @@ export function Skeleton({ className }: SkeletonProps) {
 	);
 }
 
-/* ── Card Skeleton ──────────────────────────────────────────────── */
+/* -- Card Skeleton ------------------------------------------------ */
 export function CardSkeleton({ className }: { className?: string }) {
 	return (
 		<div
@@ -33,7 +33,7 @@ export function CardSkeleton({ className }: { className?: string }) {
 	);
 }
 
-/* ── Plan Card Skeleton ─────────────────────────────────────────── */
+/* -- Plan Card Skeleton ------------------------------------------- */
 export function PlanCardSkeleton() {
 	return (
 		<div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
@@ -55,7 +55,7 @@ export function PlanCardSkeleton() {
 	);
 }
 
-/* ── Table Skeleton ─────────────────────────────────────────────── */
+/* -- Table Skeleton ----------------------------------------------- */
 export function TableSkeleton({
 	columns = 4,
 	rows = 4,
@@ -91,7 +91,7 @@ export function TableSkeleton({
 	);
 }
 
-/* ── Stat Card Skeleton ─────────────────────────────────────────── */
+/* -- Stat Card Skeleton ------------------------------------------- */
 export function StatCardSkeleton() {
 	return (
 		<div className="rounded-2xl border border-gray-200 bg-white p-6">
@@ -106,7 +106,7 @@ export function StatCardSkeleton() {
 	);
 }
 
-/* ── Page Skeleton (full dashboard) ─────────────────────────────── */
+/* -- Page Skeleton (full dashboard) ------------------------------- */
 export function DashboardSkeleton() {
 	return (
 		<div className="space-y-10 animate-pulse">

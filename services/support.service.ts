@@ -1,6 +1,6 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
-/* ── Types ──────────────────────────────────────────────────────── */
+/* -- Types -------------------------------------------------------- */
 export interface SupportTicket {
 	id: string;
 	issueType: string;
@@ -28,7 +28,7 @@ export interface CreateTicketPayload {
 	image?: File;
 }
 
-/* ── API ────────────────────────────────────────────────────────── */
+/* -- API ---------------------------------------------------------- */
 
 /** POST /support/tickets — Create a support ticket */
 export async function createTicket(

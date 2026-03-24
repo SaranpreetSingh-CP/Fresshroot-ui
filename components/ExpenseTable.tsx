@@ -157,6 +157,7 @@ export default function ExpenseTable({
 					e.id ?? `${e.category}-${e.date}-${e.amount}-${i}`
 				}
 				emptyMessage="No expenses recorded."
+				className="max-h-96"
 				footer={
 					expenses.length > 0 ? (
 						<tr className="border-t border-gray-200">

@@ -1,7 +1,7 @@
 import { cn } from "@/utils/cn";
 import type { ReactNode } from "react";
 
-/* ── Column Definition ──────────────────────────────────────────── */
+/* -- Column Definition -------------------------------------------- */
 export interface Column<T> {
 	/** Header label */
 	header: string;
@@ -13,7 +13,7 @@ export interface Column<T> {
 	className?: string;
 }
 
-/* ── Props ──────────────────────────────────────────────────────── */
+/* -- Props -------------------------------------------------------- */
 interface DataTableProps<T> {
 	columns: Column<T>[];
 	data: T[];

@@ -18,14 +18,14 @@ import {
 	MOCK_EXPENSES,
 } from "@/utils/mock-data";
 
-/* ──────────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------
    Placeholder API functions — replace with real fetch calls when
    the backend is ready.
-   ────────────────────────────────────────────────────────────────── */
+   ------------------------------------------------------------------ */
 
 const delay = (ms = 300) => new Promise((r) => setTimeout(r, ms));
 
-// ── Public ─────────────────────────────────────────────────────────
+// -- Public ---------------------------------------------------------
 export async function getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
 	await delay();
 	return SUBSCRIPTION_PLANS;
@@ -44,7 +44,7 @@ export async function submitBooking(
 	return { success: true, message: "Booking request submitted successfully!" };
 }
 
-// ── Customer Dashboard ─────────────────────────────────────────────
+// -- Customer Dashboard ---------------------------------------------
 export async function getMySubscriptions(): Promise<Subscription[]> {
 	await delay();
 	return MOCK_SUBSCRIPTIONS;
@@ -55,7 +55,7 @@ export async function getMyDeliveries(): Promise<Delivery[]> {
 	return MOCK_DELIVERIES;
 }
 
-// ── Admin Dashboard ────────────────────────────────────────────────
+// -- Admin Dashboard ------------------------------------------------
 export async function getCustomers(): Promise<Customer[]> {
 	await delay();
 	return MOCK_CUSTOMERS;

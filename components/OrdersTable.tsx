@@ -6,7 +6,7 @@ import DataTable from "@/components/DataTable";
 import type { Column } from "@/components/DataTable";
 import type { AdminOrder, OrderStatus } from "@/utils/types";
 
-/* ── Status config ──────────────────────────────────────────────── */
+/* -- Status config ------------------------------------------------ */
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
 	{ value: "pending", label: "Pending" },
@@ -56,7 +56,7 @@ function getOrderDate(order: AdminOrder): string {
 	return raw ? formatDate(raw) : "—";
 }
 
-/* ── Props ──────────────────────────────────────────────────────── */
+/* -- Props -------------------------------------------------------- */
 
 interface OrdersTableProps {
 	orders: AdminOrder[];
@@ -66,7 +66,7 @@ interface OrdersTableProps {
 	onStatusChange?: (orderId: string, status: OrderStatus) => void;
 }
 
-/* ── Component ──────────────────────────────────────────────────── */
+/* -- Component ---------------------------------------------------- */
 
 export default function OrdersTable({
 	orders,
@@ -190,7 +190,7 @@ export default function OrdersTable({
 		<Card>
 			<CardHeader>
 				<div className="flex items-center justify-between">
-					<CardTitle>Recent Orders</CardTitle>
+					<CardTitle>Upcoming Deliveries</CardTitle>
 					{onAdd && (
 						<button
 							onClick={onAdd}
@@ -206,6 +206,7 @@ export default function OrdersTable({
 				data={orders}
 				keyExtractor={(o) => o.id}
 				emptyMessage="No orders yet."
+				className="max-h-96"
 			/>
 		</Card>
 	);
