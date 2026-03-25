@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { useCustomerDashboard } from "@/hooks/useDashboard";
+import { useState, useMemo } from "react";
+import {
+	useCustomerDashboard,
+	useDeliveredOrders,
+	useCustomerUpcomingDeliveries,
+	usePlanUsage,
+	useSkipDelivery,
+	useUpdateOrderItems,
+} from "@/hooks/useDashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateCustomerOrder } from "@/hooks/useOrders";
 import { useCreateTicket, useTickets } from "@/hooks/useSupport";
 import { useToast } from "@/components/Toast";
-import SummaryCards from "@/components/SummaryCards";
+import PlanUsageCard from "@/components/PlanUsageCard";
+import DeliveredOrdersTable from "@/components/DeliveredOrdersTable";
+import CustomerUpcomingTable from "@/components/CustomerUpcomingTable";
+import OrderEditModal from "@/components/OrderEditModal";
 import SubscriptionCard from "@/components/SubscriptionCard";
-import DeliveryTable from "@/components/DeliveryTable";
 import QuickActions from "@/components/QuickActions";
 import Modal from "@/components/Modal";
 import CustomerOrderForm from "@/components/forms/CustomerOrderForm";
@@ -17,7 +26,7 @@ import SupportChat from "@/components/SupportChat";
 import Badge from "@/components/Badge";
 import Card, { CardHeader, CardTitle } from "@/components/Card";
 import { DashboardSkeleton } from "@/components/Skeleton";
-import type { OrderItemInput } from "@/utils/types";
+import type { OrderItemInput, CustomerUpcomingDelivery } from "@/utils/types";
 import type {
 	CreateTicketPayload,
 	SupportTicket,
@@ -39,17 +48,33 @@ const ticketStatusColor: Record<string, "green" | "blue" | "amber" | "gray"> = {
 export default function CustomerDashboard() {
 	const { data: user } = useAuth();
 	const { data, isLoading, isError, error } = useCustomerDashboard(CUSTOMER_ID);
+	const { data: deliveredOrders = [] } = useDeliveredOrders(CUSTOMER_ID);
+	const { data: upcomingDeliveries = [] } =
+		useCustomerUpcomingDeliveries(CUSTOMER_ID);
+	const { data: planUsage } = usePlanUsage(CUSTOMER_ID);
 	const { data: tickets } = useTickets();
-	const createOrder = useCreateCustomerOrder();
+
+	const createOrder = useCreateCustomerOrder(CUSTOMER_ID);
 	const createTicket = useCreateTicket();
+	const skipDelivery = useSkipDelivery(CUSTOMER_ID);
+	const updateItems = useUpdateOrderItems(CUSTOMER_ID);
 	const { toast } = useToast();
 
 	const [openModal, setOpenModal] = useState<ModalType>(null);
 	const [activeTicketId, setActiveTicketId] = useState<string | null>(null);
+	const [editingDelivery, setEditingDelivery] =
+		useState<CustomerUpcomingDelivery | null>(null);
 
 	function closeModal() {
 		setOpenModal(null);
 	}
+
+	// Calculate total planned qty across upcoming deliveries (excluding the one being edited)
+	const otherPlannedQty = useMemo(() => {
+		return upcomingDeliveries
+			.filter((d) => d.status !== "skipped" && d.id !== editingDelivery?.id)
+			.reduce((sum, d) => sum + d.totalQty, 0);
+	}, [upcomingDeliveries, editingDelivery]);
 
 	/* -- Handlers ----------------------------------------------- */
 
@@ -82,6 +107,37 @@ export default function CustomerDashboard() {
 					"error",
 				),
 		});
+	}
+
+	function handleSkip(delivery: CustomerUpcomingDelivery) {
+		skipDelivery.mutate(delivery.orderId ?? delivery.id, {
+			onSuccess: () => toast("Delivery skipped", "success"),
+			onError: (err) =>
+				toast(
+					err instanceof Error ? err.message : "Failed to skip delivery",
+					"error",
+				),
+		});
+	}
+
+	function handleSaveItems(
+		orderId: string,
+		items: { vegetableId: number; quantity: number; unit: string }[],
+	) {
+		updateItems.mutate(
+			{ orderId, items },
+			{
+				onSuccess: () => {
+					toast("Order items updated!", "success");
+					setEditingDelivery(null);
+				},
+				onError: (err) =>
+					toast(
+						err instanceof Error ? err.message : "Failed to update items",
+						"error",
+					),
+			},
+		);
 	}
 
 	/* -- States ------------------------------------------------- */
@@ -136,19 +192,11 @@ export default function CustomerDashboard() {
 							Welcome back, {user?.name ?? "there"} 👋
 						</h1>
 						<p className="mt-1 text-gray-600">
-							Here&apos;s an overview of your subscriptions and upcoming
-							deliveries.
+							Here&apos;s an overview of your plan, deliveries, and orders.
 						</p>
 					</div>
 					<QuickActions phone={SUPPORT_PHONE} />
 				</div>
-
-				{/* -- Quick Stats ---------------------------------------- */}
-				<SummaryCards
-					activePlans={data.activePlans}
-					upcomingDeliveries={data.upcomingDeliveries}
-					itemsDelivered={data.itemsDelivered}
-				/>
 
 				{/* -- Action buttons ------------------------------------- */}
 				<div className="flex flex-wrap gap-3">
@@ -165,6 +213,33 @@ export default function CustomerDashboard() {
 						🚨 Report Issue
 					</button>
 				</div>
+
+				{/* -- Plan Usage Summary --------------------------------- */}
+				{planUsage && (
+					<section>
+						<PlanUsageCard
+							usage={planUsage}
+							plannedQty={upcomingDeliveries
+								.filter((d) => d.status !== "skipped")
+								.reduce((sum, d) => sum + d.totalQty, 0)}
+						/>
+					</section>
+				)}
+
+				{/* -- Upcoming Deliveries -------------------------------- */}
+				<section>
+					<CustomerUpcomingTable
+						deliveries={upcomingDeliveries}
+						onEdit={(d) => setEditingDelivery(d)}
+						onSkip={handleSkip}
+						isSkipping={skipDelivery.isPending}
+					/>
+				</section>
+
+				{/* -- Delivered Orders ----------------------------------- */}
+				<section>
+					<DeliveredOrdersTable orders={deliveredOrders} />
+				</section>
 
 				{/* -- Subscriptions -------------------------------------- */}
 				<section id="subscriptions">
@@ -185,14 +260,6 @@ export default function CustomerDashboard() {
 							))}
 						</div>
 					)}
-				</section>
-
-				{/* -- Deliveries ----------------------------------------- */}
-				<section id="deliveries">
-					<h2 className="mb-4 text-xl font-bold text-gray-900">
-						Delivery Status
-					</h2>
-					<DeliveryTable deliveries={data.deliveries} />
 				</section>
 
 				{/* -- Support Tickets ------------------------------------ */}
@@ -256,6 +323,16 @@ export default function CustomerDashboard() {
 					isSubmitting={createTicket.isPending}
 				/>
 			</Modal>
+
+			<OrderEditModal
+				open={!!editingDelivery}
+				onClose={() => setEditingDelivery(null)}
+				delivery={editingDelivery}
+				planUsage={planUsage ?? null}
+				otherPlannedQty={otherPlannedQty}
+				onSave={handleSaveItems}
+				isSaving={updateItems.isPending}
+			/>
 		</>
 	);
 }

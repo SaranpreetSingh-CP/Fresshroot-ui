@@ -7,6 +7,7 @@ import type {
 	Order,
 	Expense,
 } from "./types";
+import type { Vegetable } from "@/services/vegetable.service";
 
 // -- STF Subscription Plans -----------------------------------------
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
@@ -293,3 +294,127 @@ export const TESTIMONIALS = [
 			"Farm-fresh organic produce delivered right to my door. Freshroot Farms truly transformed how my family eats — we wouldn't go back!",
 	},
 ] as const;
+
+// -- Vegetables -----------------------------------------------------
+export const MOCK_VEGETABLES: Vegetable[] = [
+	{
+		id: 1,
+		name: "Tomato",
+		hindiName: "टमाटर",
+		category: "Fruit Vegetable",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 2,
+		name: "Potato",
+		hindiName: "आलू",
+		category: "Root Vegetable",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 3,
+		name: "Onion",
+		hindiName: "प्याज़",
+		category: "Root Vegetable",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 4,
+		name: "Spinach",
+		hindiName: "पालक",
+		category: "Leafy Green",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 5,
+		name: "Cauliflower",
+		hindiName: "फूलगोभी",
+		category: "Cruciferous",
+		unit: "piece",
+		available: true,
+	},
+	{
+		id: 6,
+		name: "Capsicum",
+		hindiName: "शिमला मिर्च",
+		category: "Fruit Vegetable",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 7,
+		name: "Brinjal",
+		hindiName: "बैंगन",
+		category: "Fruit Vegetable",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 8,
+		name: "Carrot",
+		hindiName: "गाजर",
+		category: "Root Vegetable",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 9,
+		name: "Bottle Gourd",
+		hindiName: "लौकी",
+		category: "Gourd",
+		unit: "piece",
+		available: true,
+	},
+	{
+		id: 10,
+		name: "Bitter Gourd",
+		hindiName: "करेला",
+		category: "Gourd",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 11,
+		name: "Lady Finger",
+		hindiName: "भिंडी",
+		category: "Fruit Vegetable",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 12,
+		name: "Green Peas",
+		hindiName: "मटर",
+		category: "Legume",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 13,
+		name: "Cabbage",
+		hindiName: "पत्तागोभी",
+		category: "Cruciferous",
+		unit: "piece",
+		available: true,
+	},
+	{
+		id: 14,
+		name: "Radish",
+		hindiName: "मूली",
+		category: "Root Vegetable",
+		unit: "kg",
+		available: true,
+	},
+	{
+		id: 15,
+		name: "Coriander",
+		hindiName: "धनिया",
+		category: "Herb",
+		unit: "kg",
+		available: true,
+	},
+];

@@ -35,6 +35,12 @@ export default function DashboardLayout({
 						>
 							Analytics
 						</Link>
+						<Link
+							href="/dashboard/admin/leads"
+							className="transition hover:text-green-700"
+						>
+							Leads
+						</Link>
 
 						<Link
 							href="/"

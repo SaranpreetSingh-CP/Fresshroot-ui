@@ -111,6 +111,39 @@ export interface CustomerDashboardResponse {
 	itemsDelivered: number;
 	subscriptions: DashboardSubscription[];
 	deliveries: DashboardDelivery[];
+	planUsage?: PlanUsage;
+}
+
+// -- Plan Usage (Customer) ------------------------------------------
+export interface PlanUsage {
+	totalQty: number;
+	usedQty: number;
+	remainingQty: number;
+	unit: string;
+}
+
+// -- Customer Delivered / Upcoming Orders ---------------------------
+export interface CustomerOrderItem {
+	vegetableName: string;
+	quantity: number;
+	unit: string;
+	vegetableId?: number;
+}
+
+export interface CustomerDeliveredOrder {
+	id: string;
+	date: string;
+	items: CustomerOrderItem[];
+	totalQty: number;
+}
+
+export interface CustomerUpcomingDelivery {
+	id: string;
+	orderId?: string;
+	date: string;
+	items: CustomerOrderItem[];
+	totalQty: number;
+	status: "scheduled" | "in-transit" | "out-for-delivery" | "skipped";
 }
 
 // -- Admin Dashboard API Response -----------------------------------
@@ -219,7 +252,7 @@ export interface OrderItemInput {
 }
 
 export interface OrderFormData {
-	customerId: string;
+	customerId: string | number;
 	items: OrderItemInput[];
 	date?: string;
 	status?: OrderStatus;
@@ -303,4 +336,28 @@ export interface TrendDataPoint {
 export interface TopVegetable {
 	vegetableName: string;
 	totalQty: number;
+}
+
+// -- Lead / Quote Request -------------------------------------------
+export type LeadStatus = "new" | "contacted" | "converted";
+
+export interface LeadFormData {
+	name: string;
+	phone: string;
+	email: string;
+	areaSize: string;
+	planType: string;
+	message: string;
+}
+
+export interface Lead {
+	id: string;
+	name: string;
+	phone: string;
+	email: string;
+	areaSize: string;
+	planType: string;
+	message: string;
+	status: LeadStatus;
+	createdAt: string;
 }

@@ -1,167 +1,142 @@
 import type { Metadata } from "next";
-import { GARDEN_PACKAGES } from "@/utils/mock-data";
-import type { GardenPackage } from "@/utils/types";
-import BookingForm from "./BookingForm";
+import KitchenGardenClient from "./KitchenGardenClient";
 
 export const metadata: Metadata = {
-	title: "Kitchen Garden — Setup & Packages | Freshroot Farms",
+	title: "Kitchen Garden — Build Your Own | Freshroot Farms",
 	description:
-		"Set up your own organic kitchen garden with grow bags or on your land. Professional setup, maintenance and agronomist guidance.",
+		"Get a customized kitchen garden plan tailored to your space. Fresh organic vegetables at home with expert agronomist support.",
 };
 
-const formatPrice = (v: number) => `₹${v.toLocaleString("en-IN")}`;
+const BENEFITS = [
+	{
+		icon: "🥬",
+		title: "Fresh Organic Vegetables",
+		description:
+			"Grow chemical-free, nutrient-rich produce right at your doorstep.",
+	},
+	{
+		icon: "🔧",
+		title: "Fully Managed Setup & Maintenance",
+		description:
+			"We handle everything — from soil prep and planting to weekly upkeep.",
+	},
+	{
+		icon: "👩‍🌾",
+		title: "Expert Agronomist Support",
+		description:
+			"Dedicated Green Officer visits and senior agronomist guidance throughout.",
+	},
+	{
+		icon: "📐",
+		title: "Customized for Your Space",
+		description:
+			"Whether it's a balcony, terrace, or backyard — we design around what you have.",
+	},
+];
 
-function PackageTable({ pkg }: { pkg: GardenPackage }) {
-	const hasSetupCost = pkg.tiers.some((t) => t.setupCost != null);
-	const hasWeekendPrice = pkg.tiers.some((t) => t.weekendPrice != null);
-
-	return (
-		<div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-			{/* Package title */}
-			<div className="flex items-center gap-3 bg-gradient-to-r from-green-700 to-green-600 px-6 py-4">
-				<span className="text-2xl">🌱</span>
-				<h3 className="text-lg font-bold text-white">{pkg.name}</h3>
-			</div>
-
-			{/* Pricing table */}
-			<div className="overflow-x-auto">
-				<table className="w-full text-sm">
-					<thead>
-						<tr className="border-b border-gray-200 bg-gray-50">
-							<th className="px-5 py-3 text-left font-semibold text-gray-700">
-								Particulars
-							</th>
-							{pkg.tiers.map((t) => (
-								<th
-									key={t.label}
-									className="px-5 py-3 text-center font-semibold text-gray-700"
-								>
-									{t.label}
-								</th>
-							))}
-						</tr>
-					</thead>
-					<tbody className="divide-y divide-gray-100">
-						{hasSetupCost && (
-							<tr className="hover:bg-green-50/30 transition">
-								<td className="px-5 py-3 font-medium text-gray-600">
-									Setup Cost
-								</td>
-								{pkg.tiers.map((t) => (
-									<td
-										key={t.label}
-										className="px-5 py-3 text-center font-medium text-gray-900"
-									>
-										{t.setupCost != null ? formatPrice(t.setupCost) : "—"}
-									</td>
-								))}
-							</tr>
-						)}
-						<tr className="hover:bg-green-50/30 transition">
-							<td className="px-5 py-3 font-medium text-gray-600">
-								Tentative Production (Per Crop Cycle)
-							</td>
-							{pkg.tiers.map((t) => (
-								<td
-									key={t.label}
-									className="px-5 py-3 text-center text-gray-900"
-								>
-									{t.production}
-								</td>
-							))}
-						</tr>
-						<tr className="hover:bg-green-50/30 transition">
-							<td className="px-5 py-3 font-medium text-gray-600">
-								Weekday Price
-							</td>
-							{pkg.tiers.map((t) => (
-								<td
-									key={t.label}
-									className="px-5 py-3 text-center font-medium text-gray-900"
-								>
-									{formatPrice(t.weekdayPrice)}
-								</td>
-							))}
-						</tr>
-						{hasWeekendPrice && (
-							<tr className="hover:bg-green-50/30 transition">
-								<td className="px-5 py-3 font-medium text-gray-600">
-									Weekend Price
-								</td>
-								{pkg.tiers.map((t) => (
-									<td
-										key={t.label}
-										className="px-5 py-3 text-center font-medium text-gray-900"
-									>
-										{t.weekendPrice != null ? formatPrice(t.weekendPrice) : "—"}
-									</td>
-								))}
-							</tr>
-						)}
-						<tr className="hover:bg-green-50/30 transition">
-							<td className="px-5 py-3 font-medium text-gray-600">
-								Inclusions
-							</td>
-							<td
-								colSpan={pkg.tiers.length}
-								className="px-5 py-3 text-gray-700 leading-relaxed"
-							>
-								{pkg.inclusions}
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
-}
+const GALLERY = [
+	{
+		src: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=600&h=400&fit=crop",
+		alt: "Grow bags on a terrace garden",
+		label: "Grow Bag Setup",
+	},
+	{
+		src: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop",
+		alt: "Lush terrace vegetable garden",
+		label: "Terrace Garden",
+	},
+	{
+		src: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&h=400&fit=crop",
+		alt: "Fresh harvested vegetables",
+		label: "Fresh Harvest",
+	},
+];
 
 export default function KitchenGardenPage() {
 	return (
 		<>
-			{/* -- Header ------------------------------------------------ */}
-			<section className="bg-gradient-to-b from-green-50 to-white py-20">
-				<div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-					<div className="text-center">
-						<h1 className="text-4xl font-extrabold text-gray-900">
-							Kitchen Garden <span className="text-green-700">Packages</span>
-						</h1>
-						<p className="mx-auto mt-4 max-w-2xl text-gray-600">
-							Professional garden setup and 4-month maintenance with weekly
-							Green Officer visits and agronomist guidance.
-						</p>
-					</div>
+			{/* -- Hero -------------------------------------------------- */}
+			<section className="bg-gradient-to-b from-green-50 to-white pt-12 pb-4">
+				<div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+					<h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
+						Build Your Own Kitchen Garden{" "}
+						<span className="inline-block">🌱</span>
+					</h1>
+					<p className="mx-auto mt-5 max-w-2xl text-lg text-gray-600">
+						Every home is different. Get a customized kitchen garden plan
+						tailored to your space — from compact balconies to sprawling
+						backyards.
+					</p>
+				</div>
+			</section>
 
-					{/* -- Package Tables ------------------------------------ */}
-					<div className="mt-16 space-y-12">
-						{GARDEN_PACKAGES.map((pkg) => (
-							<PackageTable key={pkg.id} pkg={pkg} />
+			{/* -- Benefits ---------------------------------------------- */}
+			<section className="bg-white">
+				<div className="mx-auto max-w-5xl px-4 pt-8 pb-12 sm:px-6 lg:px-8">
+					<h2 className="text-center text-3xl font-bold text-gray-900">
+						What You Get
+					</h2>
+					<p className="mx-auto mt-3 max-w-xl text-center text-gray-500">
+						A complete, worry-free kitchen garden experience.
+					</p>
+
+					<div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+						{BENEFITS.map((b) => (
+							<div
+								key={b.title}
+								className="group rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition hover:shadow-md hover:border-green-200"
+							>
+								<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-2xl transition group-hover:bg-green-100">
+									{b.icon}
+								</div>
+								<h3 className="mt-4 text-base font-semibold text-gray-900">
+									{b.title}
+								</h3>
+								<p className="mt-2 text-sm leading-relaxed text-gray-500">
+									{b.description}
+								</p>
+							</div>
 						))}
 					</div>
-
-					{/* Bottom note */}
-					<p className="mt-10 text-center text-sm italic text-gray-500">
-						*We execute land projects from 0.5 acres upward, offering customized
-						cost estimates.
-					</p>
 				</div>
 			</section>
 
-			{/* -- Booking Form ------------------------------------------ */}
-			<section id="book" className="bg-white py-20">
-				<div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+			{/* -- Gallery ----------------------------------------------- */}
+			<section className="bg-gray-50 py-12">
+				<div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
 					<h2 className="text-center text-3xl font-bold text-gray-900">
-						Book a Kitchen Garden
+						See It in Action
 					</h2>
-					<p className="mt-2 text-center text-gray-600">
-						Fill in the form below and our team will get in touch within 24
-						hours.
+					<p className="mx-auto mt-3 max-w-xl text-center text-gray-500">
+						Real setups. Real results.
 					</p>
-					<div className="mt-10">
-						<BookingForm />
+
+					<div className="mt-12 grid gap-6 sm:grid-cols-3">
+						{GALLERY.map((img) => (
+							<div
+								key={img.label}
+								className="group overflow-hidden rounded-2xl shadow-sm"
+							>
+								{/* eslint-disable-next-line @next/next/no-img-element */}
+								<img
+									src={img.src}
+									alt={img.alt}
+									className="aspect-[3/2] w-full object-cover transition group-hover:scale-105"
+									loading="lazy"
+								/>
+								<div className="bg-white px-4 py-3">
+									<span className="text-sm font-medium text-gray-700">
+										{img.label}
+									</span>
+								</div>
+							</div>
+						))}
 					</div>
 				</div>
 			</section>
+
+			{/* -- Get Quote CTA + Modal --------------------------------- */}
+			<KitchenGardenClient />
 		</>
 	);
 }
