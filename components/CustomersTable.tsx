@@ -6,8 +6,6 @@ import Card, { CardHeader, CardTitle } from "@/components/Card";
 import Badge from "@/components/Badge";
 import type { AdminCustomer } from "@/utils/types";
 
-const PAGE_SIZE = 8;
-
 interface CustomersTableProps {
 	customers: AdminCustomer[];
 	onEdit?: (customer: AdminCustomer) => void;
@@ -26,8 +24,6 @@ export default function CustomersTable({
 	const [statusFilter, setStatusFilter] = useState<
 		"all" | "active" | "inactive"
 	>("all");
-	const [showAll, setShowAll] = useState(false);
-
 	const filtered = useMemo(() => {
 		let list = customers;
 		if (search.trim()) {
@@ -45,9 +41,6 @@ export default function CustomersTable({
 		return list;
 	}, [customers, search, statusFilter]);
 
-	const visible = showAll ? filtered : filtered.slice(0, PAGE_SIZE);
-	const hasMore = filtered.length > PAGE_SIZE;
-
 	function getPlanLabel(c: AdminCustomer): string {
 		if (!c.plan) return "—";
 		if (typeof c.plan === "object") return `${c.plan.totalQty} kg`;
@@ -55,7 +48,7 @@ export default function CustomersTable({
 	}
 
 	return (
-		<Card>
+		<Card className="flex flex-col max-h-[600px] overflow-hidden">
 			{/* Sticky header */}
 			<CardHeader>
 				<div className="flex items-center justify-between flex-wrap gap-3">
@@ -101,7 +94,6 @@ export default function CustomersTable({
 								type="button"
 								onClick={() => {
 									setStatusFilter(s);
-									setShowAll(false);
 								}}
 								className={`rounded-md px-2.5 py-1 text-xs font-medium capitalize transition ${
 									statusFilter === s
@@ -116,16 +108,16 @@ export default function CustomersTable({
 				</div>
 			</CardHeader>
 
-			{/* List */}
-			<div className="px-5 pb-4">
-				{visible.length === 0 && (
+			{/* Scrollable list */}
+			<div className="flex-1 overflow-y-auto px-5 pb-4">
+				{filtered.length === 0 && (
 					<p className="py-8 text-center text-sm text-gray-400">
 						{search ? "No matching customers." : "No customers found."}
 					</p>
 				)}
 
 				<ul className="divide-y divide-gray-100">
-					{visible.map((c) => (
+					{filtered.map((c) => (
 						<li key={c.id ?? c.name}>
 							<div
 								role="button"
@@ -210,18 +202,6 @@ export default function CustomersTable({
 						</li>
 					))}
 				</ul>
-
-				{hasMore && (
-					<div className="pt-3 text-center">
-						<button
-							type="button"
-							onClick={() => setShowAll((p) => !p)}
-							className="text-xs font-medium text-green-700 hover:text-green-800 transition"
-						>
-							{showAll ? "Show Less" : `View All (${filtered.length})`}
-						</button>
-					</div>
-				)}
 			</div>
 		</Card>
 	);
