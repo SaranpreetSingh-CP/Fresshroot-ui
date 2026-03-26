@@ -149,6 +149,7 @@ export default function OrdersByDateSection({
 	const { data, isLoading, isError } = useOrdersByDate();
 	const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 	const [initialized, setInitialized] = useState(false);
+	const [searchDate, setSearchDate] = useState("");
 
 	function toggleDate(date: string) {
 		setExpandedDates((prev) => {
@@ -175,6 +176,13 @@ export default function OrdersByDateSection({
 		? data.every((g) => expandedDates.has(g.date))
 		: false;
 
+	// Filter groups by search date
+	const filteredData = data
+		? searchDate
+			? data.filter((g) => g.date?.slice(0, 10) === searchDate)
+			: data
+		: [];
+
 	function toggleAll() {
 		if (!data) return;
 		setExpandedDates(
@@ -185,20 +193,42 @@ export default function OrdersByDateSection({
 	return (
 		<Card>
 			<CardHeader>
-				<div className="flex items-center justify-between">
+				<div className="flex items-center justify-between flex-wrap gap-3">
 					<div className="flex items-center gap-2">
 						<span className="text-lg">📦</span>
 						<CardTitle>All Deliveries</CardTitle>
 					</div>
-					{data && data.length > 1 && (
-						<button
-							type="button"
-							onClick={toggleAll}
-							className="text-xs font-medium text-green-700 hover:text-green-800 transition"
-						>
-							{allExpanded ? "Collapse All" : "Expand All"}
-						</button>
-					)}
+					<div className="flex items-center gap-3">
+						<input
+							type="date"
+							value={searchDate}
+							onChange={(e) => {
+								const val = e.target.value;
+								setSearchDate(val);
+								// Auto-expand the matched date
+								if (val) setExpandedDates((prev) => new Set(prev).add(val));
+							}}
+							className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 shadow-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
+						/>
+						{searchDate && (
+							<button
+								type="button"
+								onClick={() => setSearchDate("")}
+								className="text-xs font-medium text-gray-400 hover:text-gray-600 transition"
+							>
+								Clear
+							</button>
+						)}
+						{data && data.length > 1 && !searchDate && (
+							<button
+								type="button"
+								onClick={toggleAll}
+								className="text-xs font-medium text-green-700 hover:text-green-800 transition"
+							>
+								{allExpanded ? "Collapse All" : "Expand All"}
+							</button>
+						)}
+					</div>
 				</div>
 			</CardHeader>
 
@@ -216,13 +246,15 @@ export default function OrdersByDateSection({
 
 			{!isLoading && !isError && data && (
 				<div className="space-y-3 px-5 pb-5">
-					{data.length === 0 && (
+					{filteredData.length === 0 && (
 						<p className="py-6 text-center text-sm text-gray-400">
-							No orders found.
+							{searchDate
+								? "No deliveries found for this date."
+								: "No orders found."}
 						</p>
 					)}
 
-					{data.map((group) => {
+					{filteredData.map((group) => {
 						const isExpanded = expandedDates.has(group.date);
 						const missedCount = group.orders.filter(
 							(o) => effectiveStatus(o) === "missed",

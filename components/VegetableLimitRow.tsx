@@ -36,8 +36,6 @@ export default function VegetableLimitRow({
 		onChange(index, {
 			...row,
 			unit: newUnit,
-			maxQtyKg: newUnit === "kg" ? row.maxQtyKg : "",
-			maxQtyPiece: newUnit === "piece" ? row.maxQtyPiece : "",
 		});
 	}
 
@@ -69,45 +67,24 @@ export default function VegetableLimitRow({
 				/>
 			</div>
 
-			{/* Limit input — changes based on selected unit */}
-			{row.unit === "kg" ? (
-				<div className="w-28">
-					<Input
-						label="Max Kg"
-						id={`limit-kg-${index}`}
-						type="number"
-						min={0}
-						step={0.25}
-						value={row.maxQtyKg === "" ? "" : (row.maxQtyKg ?? "")}
-						onChange={(e) =>
-							onChange(index, {
-								...row,
-								maxQtyKg: e.target.value === "" ? "" : Number(e.target.value),
-							})
-						}
-						placeholder="e.g. 5"
-					/>
-				</div>
-			) : (
-				<div className="w-28">
-					<Input
-						label="Max Pcs"
-						id={`limit-pcs-${index}`}
-						type="number"
-						min={0}
-						step={1}
-						value={row.maxQtyPiece === "" ? "" : (row.maxQtyPiece ?? "")}
-						onChange={(e) =>
-							onChange(index, {
-								...row,
-								maxQtyPiece:
-									e.target.value === "" ? "" : Number(e.target.value),
-							})
-						}
-						placeholder="e.g. 10"
-					/>
-				</div>
-			)}
+			{/* Limit input */}
+			<div className="w-28">
+				<Input
+					label={row.unit === "kg" ? "Max Kg" : "Max Pcs"}
+					id={`limit-qty-${index}`}
+					type="number"
+					min={0}
+					step={row.unit === "kg" ? 0.25 : 1}
+					value={row.maxQty === "" ? "" : (row.maxQty ?? "")}
+					onChange={(e) =>
+						onChange(index, {
+							...row,
+							maxQty: e.target.value === "" ? "" : Number(e.target.value),
+						})
+					}
+					placeholder={row.unit === "kg" ? "e.g. 5" : "e.g. 10"}
+				/>
+			</div>
 
 			{/* Remove button */}
 			<button

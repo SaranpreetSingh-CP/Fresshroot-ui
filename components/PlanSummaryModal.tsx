@@ -78,7 +78,7 @@ export default function PlanSummaryModal({
 		return (customer.vegetableLimits ?? []).map((sl) => ({
 			vegetableId: sl.vegetableId,
 			vegetableName: sl.vegetableName,
-			limitQty: sl.limitQty,
+			limitQty: sl.limitQty ?? sl.maxQty ?? 0,
 			unit: (sl.unit ?? "piece") as "kg" | "piece",
 		}));
 	})();

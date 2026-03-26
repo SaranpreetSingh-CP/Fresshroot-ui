@@ -15,7 +15,7 @@ import {
 	useExpensesList,
 	useExpenseDetail,
 	useCustomersList,
-	useCustomerDetail,
+	useCustomerDetails,
 	useMarkDelivered,
 } from "@/hooks/useAdminMutations";
 import { useToast } from "@/components/Toast";
@@ -77,8 +77,8 @@ export default function AdminDashboard() {
 	);
 	const [viewPlanCustomer, setViewPlanCustomer] =
 		useState<AdminCustomer | null>(null);
-	const { data: customerDetail, isLoading: isLoadingDetail } =
-		useCustomerDetail(editTarget?.id ?? null);
+	const { data: customerDetailData, isLoading: isLoadingDetail } =
+		useCustomerDetails(editTarget?.id ?? "");
 	const { data: orderDetail, isLoading: isLoadingOrder } = useOrderDetail(
 		editOrderTarget?.id ?? null,
 	);
@@ -350,20 +350,24 @@ export default function AdminDashboard() {
 					/>
 				</section>
 
-				{/* -- Expense Tracker ------------------------------------ */}
-				<section id="expenses">
-					<ExpenseTable
-						expenses={expensesList ?? data.expenses}
-						totalExpenses={data.summary.expenses}
-						onAdd={() => setOpenModal("addExpense")}
-						onEdit={handleEditExpense}
-					/>
-				</section>
+				{/* -- Expense Tracker + All Deliveries (side by side) --- */}
+				<div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+					<section id="expenses" className="max-h-[600px]">
+						<ExpenseTable
+							expenses={expensesList ?? data.expenses}
+							totalExpenses={data.summary.expenses}
+							onAdd={() => setOpenModal("addExpense")}
+							onEdit={handleEditExpense}
+						/>
+					</section>
 
-				{/* -- All Deliveries (Orders by Date) ------------------- */}
-				<section id="all-deliveries">
-					<OrdersByDateSection onMarkDelivered={handleMarkDelivered} />
-				</section>
+					<section
+						id="all-deliveries"
+						className="max-h-[600px] overflow-y-auto rounded-2xl"
+					>
+						<OrdersByDateSection onMarkDelivered={handleMarkDelivered} />
+					</section>
+				</div>
 			</div>
 
 			{/* -- Modals ------------------------------------------------ */}
@@ -396,56 +400,75 @@ export default function AdminDashboard() {
 				{editTarget &&
 					!isLoadingDetail &&
 					(() => {
-						const c = customerDetail ?? editTarget;
-						// API returns subscriptions[] — pick the latest one
-						const subs = c.subscriptions as AdminCustomer["subscriptions"];
-						const sub = subs?.length ? subs[subs.length - 1] : null;
+						// /details returns { customer, subscriptions, pastOrders, totalQtyKg, vegetableLimits }
+						const c = customerDetailData?.customer ?? editTarget;
+						const detailSubs = customerDetailData?.subscriptions as
+							| AdminCustomer["subscriptions"]
+							| undefined;
+						const subs = detailSubs?.length
+							? detailSubs
+							: (c.subscriptions as AdminCustomer["subscriptions"]);
+						const sub = subs?.length ? subs[0] : null;
 
-						// Map API plan + vegetableLimits → PlanFormData for prefill
+						// Subscription fields: prefer flat customer fields, fall back to subscriptions array
+						const pType = (c.planType ?? sub?.type ?? "") as "STF" | "KG" | "";
+						const pPackage = c.packageName ?? sub?.package ?? "";
+						const pActual = c.actualPrice ?? sub?.actualPrice ?? "";
+						const pOffer = c.offerPrice ?? sub?.offerPrice ?? "";
+						const pTerms = c.paymentTerms ?? sub?.paymentTerms ?? "";
+						const pStart =
+							(c.startDate ?? sub?.startDate ?? "")?.slice(0, 10) ?? "";
+						const pSubStatus = (c.subscriptionStatus ??
+							sub?.status ??
+							"active") as "active" | "inactive";
+						const hasSub = !!(pType || sub);
+
+						// Plan & limits: read from detail response root, then customer object, then plan object
+						const detailTotalQty = customerDetailData?.totalQtyKg as
+							| number
+							| undefined;
+						const detailLimits = (customerDetailData?.vegetableLimits ??
+							[]) as NonNullable<AdminCustomer["vegetableLimits"]>;
 						const apiPlan =
 							c.plan && typeof c.plan === "object" ? c.plan : null;
-						const apiLimits = (c.vegetableLimits ?? []) as NonNullable<
-							AdminCustomer["vegetableLimits"]
-						>;
-						const hasPlan = !!(apiPlan || apiLimits.length > 0);
+						const planTotalQty =
+							detailTotalQty ?? c.totalQtyKg ?? apiPlan?.totalQty ?? "";
+						const apiLimits =
+							detailLimits.length > 0
+								? detailLimits
+								: ((c.vegetableLimits ?? []) as NonNullable<
+										AdminCustomer["vegetableLimits"]
+									>);
+						const hasPlan = !!(planTotalQty || apiLimits.length > 0);
 
 						return (
 							<CustomerForm
-								key={`${c.id}-${sub?.id ?? "no-sub"}-${apiPlan?.totalQty ?? 0}`}
+								key={`${c.id}-${pType}-${pActual}-${planTotalQty}`}
 								initial={{
 									id: String(c.id),
 									name: c.name,
 									phone: c.phone ?? "",
 									email: c.email ?? "",
 									address: c.address ?? "",
-									...(sub
-										? {
-												subscription: {
-													type: (sub.type as "STF" | "KG") ?? "",
-													package: sub.package ?? "",
-													actualPrice: sub.actualPrice ?? "",
-													offerPrice: sub.offerPrice ?? "",
-													paymentTerms: sub.paymentTerms ?? "",
-													startDate: sub.startDate?.slice(0, 10) ?? "",
-													status:
-														(sub.status as "active" | "inactive") ?? "active",
-												},
-											}
-										: {}),
-									...(hasPlan
-										? {
-												plan: {
-													totalQty: apiPlan?.totalQty ?? "",
-													limits: apiLimits.map((vl) => ({
-														vegetableId: vl.vegetableId,
-														vegetableName: vl.vegetableName,
-														unit: vl.unit ?? "piece",
-														maxQtyKg: vl.unit === "kg" ? vl.limitQty : "",
-														maxQtyPiece: vl.unit !== "kg" ? vl.limitQty : "",
-													})),
-												},
-											}
-										: {}),
+									status: (c.status as "active" | "inactive") ?? "active",
+
+									hasSubscription: hasSub,
+									planType: pType,
+									packageName: pPackage,
+									actualPrice: pActual,
+									offerPrice: pOffer,
+									paymentTerms: pTerms,
+									startDate: pStart,
+									subscriptionStatus: pSubStatus,
+
+									hasPlan,
+									totalQtyKg: planTotalQty,
+									vegetableLimits: apiLimits.map((vl) => ({
+										vegetableId: vl.vegetableId,
+										vegetableName: vl.vegetableName,
+										unit: vl.unit ?? "kg",
+										maxQty: vl.maxQty ?? vl.limitQty ?? "",
+									})),
 								}}
 								onSubmit={handleUpdateCustomer}
 								isSubmitting={updateCustomer.isPending}

@@ -6,7 +6,6 @@ import Badge from "@/components/Badge";
 import type { AdminExpense } from "@/utils/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
-const PAGE_SIZE = 8;
 
 function resolveUrl(url: string): string {
 	if (/^https?:\/\//i.test(url)) return url;
@@ -33,7 +32,6 @@ export default function ExpenseTable({
 	onEdit,
 }: ExpenseTableProps) {
 	const [categoryFilter, setCategoryFilter] = useState("all");
-	const [showAll, setShowAll] = useState(false);
 
 	const categories = useMemo(() => {
 		const set = new Set(expenses.map((e) => e.category));
@@ -44,9 +42,6 @@ export default function ExpenseTable({
 		if (categoryFilter === "all") return expenses;
 		return expenses.filter((e) => e.category === categoryFilter);
 	}, [expenses, categoryFilter]);
-
-	const visible = showAll ? filtered : filtered.slice(0, PAGE_SIZE);
-	const hasMore = filtered.length > PAGE_SIZE;
 
 	const thisMonthTotal = useMemo(() => {
 		const now = new Date();
@@ -69,7 +64,7 @@ export default function ExpenseTable({
 	);
 
 	return (
-		<Card>
+		<Card className="flex flex-col h-full overflow-hidden">
 			<CardHeader>
 				<div className="flex items-center justify-between flex-wrap gap-3">
 					<div className="flex items-center gap-3 flex-wrap">
@@ -98,7 +93,6 @@ export default function ExpenseTable({
 							type="button"
 							onClick={() => {
 								setCategoryFilter("all");
-								setShowAll(false);
 							}}
 							className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition ${categoryFilter === "all" ? "bg-green-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200"}`}
 						>
@@ -110,7 +104,6 @@ export default function ExpenseTable({
 								type="button"
 								onClick={() => {
 									setCategoryFilter(cat);
-									setShowAll(false);
 								}}
 								className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition capitalize ${categoryFilter === cat ? "bg-green-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-200"}`}
 							>
@@ -121,16 +114,16 @@ export default function ExpenseTable({
 				)}
 			</CardHeader>
 
-			{/* List */}
-			<div className="px-5 pb-4">
-				{visible.length === 0 && (
+			{/* Scrollable list */}
+			<div className="flex-1 overflow-y-auto px-5">
+				{filtered.length === 0 && (
 					<p className="py-8 text-center text-sm text-gray-400">
 						No expenses recorded.
 					</p>
 				)}
 
 				<ul className="divide-y divide-gray-100">
-					{visible.map((exp, i) => (
+					{filtered.map((exp, i) => (
 						<li
 							key={exp.id ?? `${exp.category}-${exp.date}-${exp.amount}-${i}`}
 							className="group flex items-center justify-between gap-3 rounded-lg p-3 transition hover:bg-gray-50"
@@ -201,31 +194,19 @@ export default function ExpenseTable({
 						</li>
 					))}
 				</ul>
-
-				{/* Total footer */}
-				{filtered.length > 0 && (
-					<div className="flex items-center justify-between border-t border-gray-200 pt-3 mt-1 px-3">
-						<span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-							Total
-						</span>
-						<span className="font-bold text-gray-900 text-sm">
-							₹{filteredTotal.toLocaleString("en-IN")}
-						</span>
-					</div>
-				)}
-
-				{hasMore && (
-					<div className="pt-3 text-center">
-						<button
-							type="button"
-							onClick={() => setShowAll((p) => !p)}
-							className="text-xs font-medium text-green-700 hover:text-green-800 transition"
-						>
-							{showAll ? "Show Less" : `View All (${filtered.length})`}
-						</button>
-					</div>
-				)}
 			</div>
+
+			{/* Fixed total footer */}
+			{filtered.length > 0 && (
+				<div className="shrink-0 border-t border-gray-200 px-8 py-3 flex items-center justify-between bg-white rounded-b-2xl">
+					<span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+						Total
+					</span>
+					<span className="font-bold text-gray-900 text-sm">
+						₹{filteredTotal.toLocaleString("en-IN")}
+					</span>
+				</div>
+			)}
 		</Card>
 	);
 }

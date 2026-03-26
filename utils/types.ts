@@ -186,6 +186,17 @@ export interface AdminCustomer {
 	joined?: string;
 	status?: "active" | "inactive";
 	createdAt?: string;
+
+	/* Flat subscription fields returned by list / details endpoints */
+	planType?: string;
+	packageName?: string;
+	actualPrice?: number | null;
+	offerPrice?: number | null;
+	paymentTerms?: string | null;
+	startDate?: string;
+	totalQtyKg?: number | null;
+	subscriptionStatus?: string;
+
 	/** Subscriptions array returned by API */
 	subscriptions?: {
 		id?: number;
@@ -201,7 +212,8 @@ export interface AdminCustomer {
 	vegetableLimits?: {
 		vegetableId: number;
 		vegetableName: string;
-		limitQty: number;
+		maxQty?: number;
+		limitQty?: number;
 		unit?: "kg" | "piece";
 	}[];
 }
@@ -275,13 +287,28 @@ export interface SubscriptionFormData {
 	status: "active" | "inactive";
 }
 
+/** Flat form state for customer create / edit */
 export interface CustomerFormData {
 	name: string;
 	phone: string;
 	email: string;
 	address: string;
-	subscription?: SubscriptionFormData;
-	plan?: PlanFormData;
+	status: "active" | "inactive";
+
+	/* Subscription toggle + fields */
+	hasSubscription: boolean;
+	planType: "STF" | "KG" | "";
+	packageName: string;
+	actualPrice: number | "";
+	offerPrice: number | "";
+	paymentTerms: string;
+	startDate: string;
+	subscriptionStatus: "active" | "inactive";
+
+	/* Plan & limits (STF only) */
+	hasPlan: boolean;
+	totalQtyKg: number | "";
+	vegetableLimits: VegetableLimitInput[];
 }
 
 // -- Plan / Vegetable Limits ----------------------------------------
@@ -289,10 +316,10 @@ export interface VegetableLimitInput {
 	vegetableId: number;
 	vegetableName?: string;
 	unit: "kg" | "piece";
-	maxQtyKg?: number | "";
-	maxQtyPiece?: number | "";
+	maxQty: number | "";
 }
 
+/** @deprecated Use flat fields on CustomerFormData instead */
 export interface PlanFormData {
 	totalQty: number | "";
 	limits: VegetableLimitInput[];

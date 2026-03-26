@@ -2,40 +2,44 @@ import type { CustomerFormData, CustomerPlanResponse } from "@/utils/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
-/** Build the API payload, mapping subscription + plan fields to the expected shape */
+/**
+ * Build the API payload from the flat CustomerFormData.
+ * Omits subscription / plan / limits when the corresponding toggles are off.
+ */
 function toPayload(data: CustomerFormData) {
-	const { subscription, plan, ...customer } = data;
-
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const payload: Record<string, any> = { ...customer };
+	const payload: Record<string, any> = {
+		name: data.name,
+		phone: data.phone,
+		email: data.email,
+		address: data.address,
+		status: data.status,
+	};
 
-	if (subscription && subscription.type) {
+	if (data.hasSubscription && data.planType) {
 		payload.subscription = {
-			type: subscription.type,
-			package: subscription.package,
-			actualPrice: Number(subscription.actualPrice),
-			offerPrice: subscription.offerPrice
-				? Number(subscription.offerPrice)
-				: undefined,
-			paymentTerms: subscription.paymentTerms || undefined,
-			startDate: subscription.startDate,
-			status: subscription.status,
+			type: data.planType,
+			package: data.packageName,
+			actualPrice: Number(data.actualPrice),
+			offerPrice: data.offerPrice ? Number(data.offerPrice) : undefined,
+			paymentTerms: data.paymentTerms || undefined,
+			startDate: data.startDate,
+			status: data.subscriptionStatus,
 		};
 	}
 
-	if (plan && plan.totalQty) {
+	if (data.hasPlan && data.totalQtyKg) {
 		payload.plan = {
-			totalQty: Number(plan.totalQty),
+			totalQty: Number(data.totalQtyKg),
 		};
 
-		// Send vegetableLimits as a flat array in the API-expected shape
-		const limits = (plan.limits ?? []).filter(
-			(l) => l.vegetableId && (l.maxQtyKg || l.maxQtyPiece),
+		const limits = (data.vegetableLimits ?? []).filter(
+			(l) => l.vegetableId && l.maxQty !== "" && l.maxQty !== undefined,
 		);
 		if (limits.length > 0) {
 			payload.vegetableLimits = limits.map((l) => ({
 				vegetableId: l.vegetableId,
-				limitQty: l.unit === "kg" ? Number(l.maxQtyKg) : Number(l.maxQtyPiece),
+				limitQty: Number(l.maxQty),
 				unit: l.unit,
 			}));
 		}
