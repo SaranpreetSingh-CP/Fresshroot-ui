@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Card, { CardHeader, CardTitle } from "@/components/Card";
 import DataTable from "@/components/DataTable";
 import type { Column } from "@/components/DataTable";
@@ -90,15 +91,17 @@ function buildColumns(
 			accessorKey: "items",
 			cell: (row) => (
 				<span className="text-gray-600 text-xs">
-					{Array.isArray(row.items) && row.items.length
-						? row.items
-								.map((item) =>
-									typeof item === "string"
-										? item
-										: (item as { name: string }).name,
-								)
-								.join(", ")
-						: "-"}
+					{typeof row.items === "string"
+						? row.items || "-"
+						: Array.isArray(row.items) && row.items.length
+							? row.items
+									.map((item) =>
+										typeof item === "string"
+											? item
+											: (item as { name: string }).name,
+									)
+									.join(", ")
+							: "-"}
 				</span>
 			),
 		},
@@ -224,6 +227,8 @@ interface UpcomingDeliveriesTableProps {
 	onMarkDelivered?: (orderId: string) => void;
 }
 
+const MAX_VISIBLE = 8;
+
 export default function UpcomingDeliveriesTable({
 	onAdd,
 	onStatusChange,
@@ -232,6 +237,7 @@ export default function UpcomingDeliveriesTable({
 	onMarkDelivered,
 }: UpcomingDeliveriesTableProps) {
 	const { data, isLoading, isError } = useUpcomingDeliveries();
+	const [showAll, setShowAll] = useState(false);
 
 	// Sort ascending (nearest date first)
 	const sorted = data
@@ -239,6 +245,9 @@ export default function UpcomingDeliveriesTable({
 				(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
 			)
 		: [];
+
+	const visible = showAll ? sorted : sorted.slice(0, MAX_VISIBLE);
+	const hasMore = sorted.length > MAX_VISIBLE;
 
 	const columns = buildColumns(
 		onStatusChange,
@@ -251,7 +260,10 @@ export default function UpcomingDeliveriesTable({
 		<Card>
 			<CardHeader>
 				<div className="flex items-center justify-between">
-					<CardTitle>Upcoming Deliveries</CardTitle>
+					<div className="flex items-center gap-2">
+						<span className="text-lg">🚚</span>
+						<CardTitle>Upcoming Deliveries</CardTitle>
+					</div>
 					{onAdd && (
 						<button
 							onClick={onAdd}
@@ -278,16 +290,30 @@ export default function UpcomingDeliveriesTable({
 			)}
 
 			{!isLoading && !isError && (
-				<DataTable
-					columns={columns}
-					data={sorted}
-					keyExtractor={(d) => d.id}
-					emptyMessage="No upcoming deliveries."
-					className="max-h-96"
-					rowClassName={(row) =>
-						effectiveStatus(row) === "missed" ? "bg-red-50/50" : ""
-					}
-				/>
+				<>
+					<DataTable
+						columns={columns}
+						data={visible}
+						keyExtractor={(d) => d.id}
+						emptyMessage="No upcoming deliveries."
+						rowClassName={(row) =>
+							effectiveStatus(row) === "missed"
+								? "!bg-red-50 ring-1 ring-inset ring-red-100"
+								: ""
+						}
+					/>
+					{hasMore && (
+						<div className="py-3 text-center border-t border-gray-100">
+							<button
+								type="button"
+								onClick={() => setShowAll((p) => !p)}
+								className="text-xs font-medium text-green-700 hover:text-green-800 transition"
+							>
+								{showAll ? "Show Less" : `View All (${sorted.length})`}
+							</button>
+						</div>
+					)}
+				</>
 			)}
 		</Card>
 	);

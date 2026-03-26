@@ -30,6 +30,7 @@ import Modal from "@/components/Modal";
 import CustomerForm from "@/components/forms/CustomerForm";
 import OrderForm from "@/components/forms/OrderForm";
 import ExpenseForm from "@/components/forms/ExpenseForm";
+import PlanSummaryModal from "@/components/PlanSummaryModal";
 import type {
 	AdminCustomer,
 	AdminOrder,
@@ -74,6 +75,8 @@ export default function AdminDashboard() {
 	const [confirmDeliveredId, setConfirmDeliveredId] = useState<string | null>(
 		null,
 	);
+	const [viewPlanCustomer, setViewPlanCustomer] =
+		useState<AdminCustomer | null>(null);
 	const { data: customerDetail, isLoading: isLoadingDetail } =
 		useCustomerDetail(editTarget?.id ?? null);
 	const { data: orderDetail, isLoading: isLoadingOrder } = useOrderDetail(
@@ -289,7 +292,7 @@ export default function AdminDashboard() {
 
 	return (
 		<>
-			<div className="space-y-10">
+			<div className="flex flex-col gap-6">
 				<div>
 					<h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
 					<p className="mt-1 text-gray-600">
@@ -303,33 +306,39 @@ export default function AdminDashboard() {
 					activeCustomers={data.summary.activeCustomers}
 					revenue={data.summary.revenue}
 					expenses={data.summary.expenses}
+					todayDeliveries={data.summary.todayDeliveries ?? 0}
+					pendingOrders={data.summary.pendingOrders ?? 0}
 				/>
 
-				{/* -- Upcoming Deliveries -------------------------------- */}
-				<section id="upcoming-deliveries">
-					<UpcomingDeliveriesTable
-						onAdd={() => setOpenModal("addOrder")}
-						onStatusChange={handleStatusChange}
-						onEdit={(row) =>
-							handleEditOrder({
-								id: row.id,
-								customerId: 0,
-								customerName: row.customerName,
-								items: row.items as AdminOrder["items"],
-								total: row.total,
-								status: row.status as AdminOrder["status"],
-								date: row.date,
-							})
-						}
-						onDelete={handleDeleteOrder}
-						onMarkDelivered={handleMarkDelivered}
-					/>
-				</section>
+				{/* -- Split: Upcoming Deliveries + Set Prices ------------ */}
+				<div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+					<section id="upcoming-deliveries" className="xl:col-span-2">
+						<UpcomingDeliveriesTable
+							onAdd={() => setOpenModal("addOrder")}
+							onStatusChange={handleStatusChange}
+							onEdit={(row) =>
+								handleEditOrder({
+									id: row.id,
+									customerId: 0,
+									customerName: row.customerName,
+									items: row.items as AdminOrder["items"],
+									total: row.total,
+									status: row.status as AdminOrder["status"],
+									date: row.date,
+								})
+							}
+							onDelete={handleDeleteOrder}
+							onMarkDelivered={handleMarkDelivered}
+						/>
+					</section>
 
-				{/* -- Set Vegetable Prices ------------------------------- */}
-				<section id="pricing">
-					<PricingForm />
-				</section>
+					<section
+						id="pricing"
+						className="xl:col-span-1 [&>div]:h-full [&>div]:max-h-[600px] [&>div]:flex [&>div]:flex-col [&>div]:overflow-hidden"
+					>
+						<PricingForm />
+					</section>
+				</div>
 
 				{/* -- Customer List -------------------------------------- */}
 				<section id="customers">
@@ -337,6 +346,7 @@ export default function AdminDashboard() {
 						customers={data.customers}
 						onAdd={() => setOpenModal("addCustomer")}
 						onEdit={handleEditCustomer}
+						onViewPlan={(c) => setViewPlanCustomer(c)}
 					/>
 				</section>
 
@@ -390,9 +400,18 @@ export default function AdminDashboard() {
 						// API returns subscriptions[] — pick the latest one
 						const subs = c.subscriptions as AdminCustomer["subscriptions"];
 						const sub = subs?.length ? subs[subs.length - 1] : null;
+
+						// Map API plan + vegetableLimits → PlanFormData for prefill
+						const apiPlan =
+							c.plan && typeof c.plan === "object" ? c.plan : null;
+						const apiLimits = (c.vegetableLimits ?? []) as NonNullable<
+							AdminCustomer["vegetableLimits"]
+						>;
+						const hasPlan = !!(apiPlan || apiLimits.length > 0);
+
 						return (
 							<CustomerForm
-								key={`${c.id}-${sub?.id ?? "no-sub"}`}
+								key={`${c.id}-${sub?.id ?? "no-sub"}-${apiPlan?.totalQty ?? 0}`}
 								initial={{
 									id: String(c.id),
 									name: c.name,
@@ -410,6 +429,20 @@ export default function AdminDashboard() {
 													startDate: sub.startDate?.slice(0, 10) ?? "",
 													status:
 														(sub.status as "active" | "inactive") ?? "active",
+												},
+											}
+										: {}),
+									...(hasPlan
+										? {
+												plan: {
+													totalQty: apiPlan?.totalQty ?? "",
+													limits: apiLimits.map((vl) => ({
+														vegetableId: vl.vegetableId,
+														vegetableName: vl.vegetableName,
+														unit: vl.unit ?? "piece",
+														maxQtyKg: vl.unit === "kg" ? vl.limitQty : "",
+														maxQtyPiece: vl.unit !== "kg" ? vl.limitQty : "",
+													})),
 												},
 											}
 										: {}),
@@ -547,6 +580,17 @@ export default function AdminDashboard() {
 					</button>
 				</div>
 			</Modal>
+
+			{/* -- Plan Summary Modal -------------------------------- */}
+			<PlanSummaryModal
+				open={!!viewPlanCustomer}
+				onClose={() => setViewPlanCustomer(null)}
+				customer={viewPlanCustomer}
+				onEdit={(c) => {
+					setViewPlanCustomer(null);
+					handleEditCustomer(c);
+				}}
+			/>
 		</>
 	);
 }

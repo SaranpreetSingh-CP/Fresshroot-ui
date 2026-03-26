@@ -76,9 +76,9 @@ export default function DataTable<T>({
 								key={keyExtractor(row, idx)}
 								onClick={onRowClick ? () => onRowClick(row) : undefined}
 								className={cn(
-									onRowClick
-										? "cursor-pointer hover:bg-gray-50 transition-colors"
-										: undefined,
+									"transition-colors hover:bg-green-50/40",
+									idx % 2 === 1 && "bg-gray-50/50",
+									onRowClick && "cursor-pointer",
 									rowClassName?.(row),
 								)}
 							>
@@ -86,7 +86,7 @@ export default function DataTable<T>({
 									<td
 										key={col.accessorKey}
 										className={cn(
-											"py-3",
+											"py-3.5",
 											i < columns.length - 1 && "pr-4",
 											col.className,
 										)}

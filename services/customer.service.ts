@@ -1,16 +1,16 @@
-import type { CustomerFormData } from "@/utils/types";
+import type { CustomerFormData, CustomerPlanResponse } from "@/utils/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
-/** Build the API payload, mapping subscription fields to the expected shape */
+/** Build the API payload, mapping subscription + plan fields to the expected shape */
 function toPayload(data: CustomerFormData) {
-	const { subscription, ...customer } = data;
+	const { subscription, plan, ...customer } = data;
 
-	if (!subscription || !subscription.type) return customer;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const payload: Record<string, any> = { ...customer };
 
-	return {
-		...customer,
-		subscription: {
+	if (subscription && subscription.type) {
+		payload.subscription = {
 			type: subscription.type,
 			package: subscription.package,
 			actualPrice: Number(subscription.actualPrice),
@@ -20,8 +20,28 @@ function toPayload(data: CustomerFormData) {
 			paymentTerms: subscription.paymentTerms || undefined,
 			startDate: subscription.startDate,
 			status: subscription.status,
-		},
-	};
+		};
+	}
+
+	if (plan && plan.totalQty) {
+		payload.plan = {
+			totalQty: Number(plan.totalQty),
+		};
+
+		// Send vegetableLimits as a flat array in the API-expected shape
+		const limits = (plan.limits ?? []).filter(
+			(l) => l.vegetableId && (l.maxQtyKg || l.maxQtyPiece),
+		);
+		if (limits.length > 0) {
+			payload.vegetableLimits = limits.map((l) => ({
+				vegetableId: l.vegetableId,
+				limitQty: l.unit === "kg" ? Number(l.maxQtyKg) : Number(l.maxQtyPiece),
+				unit: l.unit,
+			}));
+		}
+	}
+
+	return payload;
 }
 
 /** POST /customers — Create a new customer */
@@ -69,5 +89,14 @@ export async function getCustomerDetails(id: string) {
 	const res = await fetch(`${API_BASE}/customers/${id}/details`);
 	if (!res.ok)
 		throw new Error(`Failed to fetch customer details (${res.status})`);
+	return res.json();
+}
+
+/** GET /customers/:id/plan — Fetch customer plan with vegetable limits */
+export async function getCustomerPlan(
+	id: string,
+): Promise<CustomerPlanResponse> {
+	const res = await fetch(`${API_BASE}/customers/${id}/plan`);
+	if (!res.ok) throw new Error(`Failed to fetch customer plan (${res.status})`);
 	return res.json();
 }

@@ -7,6 +7,7 @@ import {
 	getCustomers,
 	getCustomerById,
 	getCustomerDetails,
+	getCustomerPlan,
 } from "@/services/customer.service";
 import {
 	createOrder,
@@ -203,6 +204,16 @@ export function useCustomerDetails(id: string) {
 		enabled: !!id,
 	});
 }
+
+/* -- Customer Plan (with vegetable limits) ----------------------- */
+export function useCustomerPlan(id: string) {
+	return useQuery({
+		queryKey: ["customerPlan", id],
+		queryFn: () => getCustomerPlan(id),
+		enabled: !!id,
+	});
+}
+
 /* -- Update Delivery Status --------------------------------------- */
 export function useUpdateDeliveryStatus() {
 	const queryClient = useQueryClient();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useMemo, type FormEvent } from "react";
 import { Input, Select } from "@/components/FormFields";
 import Button from "@/components/Button";
 import OrderItemRow from "@/components/OrderItemRow";
@@ -55,8 +55,36 @@ export default function OrderForm({
 
 	const todayISO = new Date().toISOString().slice(0, 10);
 
+	// Generate next 8 weeks of Wed (3) & Sat (6) delivery dates
+	const deliveryDateOptions = useMemo(() => {
+		const options: { value: string; label: string }[] = [];
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		const d = new Date(today);
+		d.setDate(d.getDate() + 1); // start from tomorrow
+		const end = new Date(today);
+		end.setDate(end.getDate() + 56); // 8 weeks ahead
+		while (d <= end) {
+			const day = d.getDay();
+			if (day === 3 || day === 6) {
+				const iso = d.toISOString().slice(0, 10);
+				const label = d.toLocaleDateString("en-IN", {
+					weekday: "short",
+					day: "2-digit",
+					month: "short",
+					year: "numeric",
+				});
+				options.push({ value: iso, label });
+			}
+			d.setDate(d.getDate() + 1);
+		}
+		return options;
+	}, []);
+
 	const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
-	const [date, setDate] = useState(initial?.date?.slice(0, 10) || todayISO);
+	const [date, setDate] = useState(
+		initial?.date?.slice(0, 10) || deliveryDateOptions[0]?.value || todayISO,
+	);
 	const [status, setStatus] = useState<OrderStatus>(
 		initial?.status ?? "pending",
 	);
@@ -108,6 +136,14 @@ export default function OrderForm({
 	function validate(): boolean {
 		const e: typeof errors = {};
 		if (!customerId) e.customer = "Select a customer";
+		if (!date) {
+			e.customer = "Please select a delivery date";
+		} else {
+			const selectedDay = new Date(date).getDay();
+			if (selectedDay !== 3 && selectedDay !== 6) {
+				e.customer = "Delivery is only available on Wednesdays and Saturdays";
+			}
+		}
 		if (rows.length === 0) e.items = "Add at least one item";
 		else if (rows.some((r) => r.vegId === null || r.quantity <= 0))
 			e.items = "Select a vegetable and enter quantity > 0 for each item";
@@ -163,20 +199,15 @@ export default function OrderForm({
 					)}
 				</div>
 
-				<div className="relative">
-					<Input
+				<div>
+					<Select
 						label="Delivery Date"
 						id="order-date"
-						type="date"
 						value={date}
-						min={todayISO}
+						options={deliveryDateOptions}
 						onChange={(e) => setDate(e.target.value)}
 					/>
-					{date === todayISO && (
-						<span className="absolute top-0 right-0 rounded-full bg-green-100 text-green-700 text-[10px] font-medium px-1.5 py-0">
-							Today
-						</span>
-					)}
+					<p className="mt-1 text-[11px] text-gray-400">Wed &amp; Sat only</p>
 				</div>
 
 				<Select

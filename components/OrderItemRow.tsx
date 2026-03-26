@@ -2,8 +2,18 @@
 
 import { Input } from "@/components/FormFields";
 import VegetableDropdown from "@/components/VegetableDropdown";
+import LimitBadge, { deriveLimitStatus } from "@/components/LimitBadge";
 import type { Vegetable } from "@/services/vegetable.service";
-import type { OrderItemInput } from "@/utils/types";
+import type { OrderItemInput, VegetableUsage } from "@/utils/types";
+import { cn } from "@/utils/cn";
+
+export interface VegLimitInfo {
+	limit: number | null;
+	used: number;
+	unit: "kg" | "piece";
+	/** Quantity allocated by OTHER rows for the same vegetable in this order */
+	otherRowsQty: number;
+}
 
 interface OrderItemRowProps {
 	index: number;
@@ -14,6 +24,10 @@ interface OrderItemRowProps {
 	selectedVegIds: number[];
 	/** Currently selected vegetable ID for this row */
 	vegId: number | null;
+	/** Per-vegetable limit / usage info (from plan-usage API) */
+	limitInfo?: VegLimitInfo | null;
+	/** Whether the vegetable has zero remaining and should be visually flagged */
+	zeroRemaining?: boolean;
 	onUpdate: (
 		index: number,
 		field: keyof OrderItemInput,
@@ -31,15 +45,55 @@ export default function OrderItemRow({
 	vegetablesLoading,
 	selectedVegIds,
 	vegId,
+	limitInfo,
+	zeroRemaining,
 	onUpdate,
 	onVegSelect,
 	onRemove,
 	canRemove,
 }: OrderItemRowProps) {
-	const selectedVeg = vegetables.find((v) => v.id === vegId);
+	// Derive remaining qty for this specific vegetable
+	const remaining =
+		limitInfo && limitInfo.limit !== null
+			? limitInfo.limit -
+				limitInfo.used -
+				limitInfo.otherRowsQty -
+				item.quantity
+			: null;
+
+	const remainingBeforeThisRow =
+		limitInfo && limitInfo.limit !== null
+			? limitInfo.limit - limitInfo.used - limitInfo.otherRowsQty
+			: null;
+
+	const status =
+		remaining !== null
+			? deriveLimitStatus(limitInfo!.limit, remaining + item.quantity) // status based on remaining (excl. this row's qty)
+			: "none";
+
+	// Effective status considering this row's qty
+	const effectiveStatus =
+		remaining !== null
+			? deriveLimitStatus(limitInfo!.limit, remaining)
+			: "none";
+
+	const isExceeded = effectiveStatus === "exceeded";
+	const isWarning = effectiveStatus === "warning";
+
+	// Border colour based on status
+	const borderClass = isExceeded
+		? "border-red-300 bg-red-50/30"
+		: isWarning
+			? "border-amber-300 bg-amber-50/30"
+			: "border-gray-200";
 
 	return (
-		<div className="rounded-lg border border-gray-200 p-3 space-y-2">
+		<div
+			className={cn(
+				"rounded-lg border p-3 space-y-2 transition-colors",
+				borderClass,
+			)}
+		>
 			<div className="flex items-start gap-2">
 				{/* Vegetable dropdown */}
 				<div className="flex-1">
@@ -59,11 +113,25 @@ export default function OrderItemRow({
 						label="Qty"
 						id={`qty-${index}`}
 						type="number"
-						min={1}
-						value={item.quantity}
-						onChange={(e) =>
-							onUpdate(index, "quantity", Number(e.target.value))
+						min={0.1}
+						step={0.1}
+						max={
+							remainingBeforeThisRow !== null
+								? Math.max(remainingBeforeThisRow, 0)
+								: undefined
 						}
+						value={item.quantity}
+						onChange={(e) => {
+							let val = Number(e.target.value);
+							// Auto-cap: clamp to remaining if limit exists
+							if (
+								remainingBeforeThisRow !== null &&
+								val > remainingBeforeThisRow
+							) {
+								val = Math.max(remainingBeforeThisRow, 0);
+							}
+							onUpdate(index, "quantity", val);
+						}}
 					/>
 				</div>
 
@@ -100,6 +168,44 @@ export default function OrderItemRow({
 					</button>
 				)}
 			</div>
+
+			{/* Limit badge + warning */}
+			{vegId !== null && limitInfo && (
+				<div className="flex items-center gap-2 flex-wrap">
+					<LimitBadge
+						remaining={
+							remainingBeforeThisRow !== null
+								? Math.max(remainingBeforeThisRow, 0)
+								: 0
+						}
+						unit={limitInfo.unit}
+						status={
+							remainingBeforeThisRow !== null
+								? deriveLimitStatus(limitInfo.limit, remainingBeforeThisRow)
+								: "none"
+						}
+					/>
+
+					{/* Inline warning message */}
+					{isExceeded && (
+						<span className="text-[11px] font-medium text-red-600">
+							Limit exceeded — reduce quantity
+						</span>
+					)}
+					{isWarning && !isExceeded && remaining !== null && (
+						<span className="text-[11px] font-medium text-amber-600">
+							Only {Math.max(remaining, 0)} {limitInfo.unit} left
+						</span>
+					)}
+				</div>
+			)}
+
+			{/* No-limit tooltip hint */}
+			{vegId !== null && !limitInfo && (
+				<span className="text-[11px] text-gray-400 italic">
+					No limit set for this vegetable
+				</span>
+			)}
 		</div>
 	);
 }

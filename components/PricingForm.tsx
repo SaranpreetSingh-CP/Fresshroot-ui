@@ -141,18 +141,16 @@ export default function PricingForm() {
 	return (
 		<Card>
 			<CardHeader>
-				<div className="flex items-center justify-between flex-wrap gap-3">
-					<div>
-						<CardTitle>Set Vegetable Prices</CardTitle>
-						<p className="mt-0.5 text-xs text-gray-400">
-							You can update prices anytime. Only filled fields will be saved.
-						</p>
+				<div className="flex items-center justify-between flex-wrap gap-2">
+					<div className="flex items-center gap-2">
+						<span className="text-lg">🌿</span>
+						<CardTitle>Set Prices</CardTitle>
 					</div>
 					<input
 						type="date"
 						value={date}
 						onChange={(e) => setDate(e.target.value)}
-						className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none"
+						className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs focus:border-green-500 focus:ring-1 focus:ring-green-200 outline-none"
 					/>
 				</div>
 			</CardHeader>
@@ -172,19 +170,19 @@ export default function PricingForm() {
 			)}
 
 			{!isLoading && !isErrorVeg && vegetables && (
-				<form onSubmit={handleSubmit} className="space-y-4">
-					{/* Table header */}
-					<div className="grid grid-cols-[1fr_auto] gap-4 px-2 pb-1 border-b border-gray-200">
-						<span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+				<form onSubmit={handleSubmit} className="flex flex-col">
+					{/* Column header */}
+					<div className="sticky top-0 z-[1] grid grid-cols-[1fr_auto] gap-4 px-4 py-2 border-b border-gray-200 bg-white">
+						<span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
 							Vegetable
 						</span>
-						<span className="text-xs font-semibold uppercase tracking-wide text-gray-500 text-right">
-							Price (₹/kg)
+						<span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 text-right">
+							₹/kg
 						</span>
 					</div>
 
-					{/* Rows */}
-					<div className="max-h-96 overflow-y-auto divide-y divide-gray-100">
+					{/* Scrollable rows */}
+					<div className="overflow-y-auto flex-1 divide-y divide-gray-100">
 						{vegetables.map((veg) => (
 							<VegetablePriceInput
 								key={veg.id}
@@ -205,24 +203,20 @@ export default function PricingForm() {
 						</p>
 					)}
 
+					{/* Sticky save footer */}
 					{vegetables.length > 0 && (
-						<div className="flex items-center justify-between gap-4 pt-1">
-							{submittablePrices.length > 0 && (
-								<span className="text-xs text-gray-400">
-									{submittablePrices.length} of {vegetables.length} priced
-								</span>
-							)}
-							{submittablePrices.length === 0 && (
-								<span className="text-xs text-gray-400">
-									Enter at least one price to save
-								</span>
-							)}
+						<div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
+							<span className="text-[11px] text-gray-400">
+								{submittablePrices.length > 0
+									? `${submittablePrices.length}/${vegetables.length} priced`
+									: "Enter at least one price"}
+							</span>
 							<button
 								type="submit"
 								disabled={setPricesMut.isPending || !canSubmit}
-								className="rounded-xl bg-green-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition ml-auto"
+								className="rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
 							>
-								{setPricesMut.isPending ? "Saving..." : "Save Prices"}
+								{setPricesMut.isPending ? "Saving…" : "Save Prices"}
 							</button>
 						</div>
 					)}

@@ -45,6 +45,7 @@ export function usePlanUsage(customerId: string) {
 	return useQuery({
 		queryKey: ["planUsage", customerId],
 		queryFn: () => getPlanUsage(customerId),
+		enabled: !!customerId,
 		staleTime: 1000 * 60 * 2,
 	});
 }

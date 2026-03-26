@@ -105,6 +105,12 @@ export interface DashboardDelivery {
 		| "out-for-delivery";
 }
 
+// -- Consumed Quantity (Customer Dashboard) -------------------------
+export interface ConsumedQuantity {
+	kg: number;
+	pieces: Record<string, number>;
+}
+
 export interface CustomerDashboardResponse {
 	activePlans: number;
 	upcomingDeliveries: number;
@@ -115,11 +121,34 @@ export interface CustomerDashboardResponse {
 }
 
 // -- Plan Usage (Customer) ------------------------------------------
+export interface VegetableUsage {
+	vegetableId: number;
+	vegetableName: string;
+	limit: number | null;
+	used: number;
+	unit: "kg" | "piece";
+}
+
+/** Shape returned by the API inside plan-usage → pieceUsage[] */
+export interface PieceUsageItem {
+	vegetableId: number;
+	vegetableName: string;
+	limitQty: number;
+	usedQty: number;
+	plannedQty: number;
+	remainingQty: number;
+}
+
 export interface PlanUsage {
 	totalQty: number;
 	usedQty: number;
 	remainingQty: number;
 	unit: string;
+	consumedQuantity?: ConsumedQuantity;
+	/** Per-vegetable usage vs limits (from plan-usage API) */
+	vegetableUsage?: VegetableUsage[];
+	/** Piece-based vegetable limits (from plan-usage API) */
+	pieceUsage?: PieceUsageItem[];
 }
 
 // -- Customer Delivered / Upcoming Orders ---------------------------
@@ -153,7 +182,7 @@ export interface AdminCustomer {
 	email: string | null;
 	phone?: string;
 	address?: string;
-	plan?: string;
+	plan?: string | { totalQty: number };
 	joined?: string;
 	status?: "active" | "inactive";
 	createdAt?: string;
@@ -167,6 +196,13 @@ export interface AdminCustomer {
 		paymentTerms?: string | null;
 		startDate?: string;
 		status?: string;
+	}[];
+	/** Vegetable limits returned by GET /customers/:id */
+	vegetableLimits?: {
+		vegetableId: number;
+		vegetableName: string;
+		limitQty: number;
+		unit?: "kg" | "piece";
 	}[];
 }
 
@@ -217,6 +253,8 @@ export interface AdminDashboardSummary {
 	activeCustomers: number;
 	revenue: number;
 	expenses: number;
+	todayDeliveries?: number;
+	pendingOrders?: number;
 }
 
 export interface AdminDashboardResponse {
@@ -243,6 +281,34 @@ export interface CustomerFormData {
 	email: string;
 	address: string;
 	subscription?: SubscriptionFormData;
+	plan?: PlanFormData;
+}
+
+// -- Plan / Vegetable Limits ----------------------------------------
+export interface VegetableLimitInput {
+	vegetableId: number;
+	vegetableName?: string;
+	unit: "kg" | "piece";
+	maxQtyKg?: number | "";
+	maxQtyPiece?: number | "";
+}
+
+export interface PlanFormData {
+	totalQty: number | "";
+	limits: VegetableLimitInput[];
+}
+
+export interface VegetableLimitResponse {
+	vegetableId: number;
+	vegetableName: string;
+	maxQtyKg: number | null;
+	maxQtyPiece: number | null;
+}
+
+export interface CustomerPlanResponse {
+	id: string;
+	totalQty: number;
+	limits: VegetableLimitResponse[];
 }
 
 export interface OrderItemInput {
@@ -277,7 +343,9 @@ export interface UpcomingDelivery {
 	id: string;
 	orderId?: string;
 	customerName: string;
-	items: (string | { name: string; unit?: string; quantity?: number })[];
+	items:
+		| string
+		| (string | { name: string; unit?: string; quantity?: number })[];
 	total?: number;
 	date: string;
 	status: string;
@@ -300,7 +368,9 @@ export interface SetPricesPayload {
 export interface OrderByDateItem {
 	id: string;
 	customerName: string;
-	items: (string | { name: string; unit?: string; quantity?: number })[];
+	items:
+		| string
+		| (string | { name: string; unit?: string; quantity?: number })[];
 	total: number;
 	cost: number | null;
 	status: string;

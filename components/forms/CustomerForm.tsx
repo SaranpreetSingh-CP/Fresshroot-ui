@@ -4,7 +4,14 @@ import { useState, type FormEvent } from "react";
 import { Input } from "@/components/FormFields";
 import Button from "@/components/Button";
 import SubscriptionForm from "@/components/forms/SubscriptionForm";
-import type { CustomerFormData, SubscriptionFormData } from "@/utils/types";
+import VegetableLimitRow from "@/components/VegetableLimitRow";
+import { useVegetables } from "@/hooks/useVegetables";
+import type {
+	CustomerFormData,
+	SubscriptionFormData,
+	PlanFormData,
+	VegetableLimitInput,
+} from "@/utils/types";
 
 interface CustomerFormProps {
 	/** Pre-fill for editing */
@@ -15,7 +22,7 @@ interface CustomerFormProps {
 	isSubmitting?: boolean;
 }
 
-const emptyCustomer: Omit<CustomerFormData, "subscription"> = {
+const emptyCustomer: Omit<CustomerFormData, "subscription" | "plan"> = {
 	name: "",
 	phone: "",
 	email: "",
@@ -32,12 +39,29 @@ const emptySub: SubscriptionFormData = {
 	status: "active",
 };
 
+const emptyPlan: PlanFormData = {
+	totalQty: "",
+	limits: [],
+};
+
+const emptyLimit: VegetableLimitInput = {
+	vegetableId: 0,
+	vegetableName: "",
+	unit: "kg",
+	maxQtyKg: "",
+	maxQtyPiece: "",
+};
+
 export default function CustomerForm({
 	initial,
 	onSubmit,
 	isSubmitting,
 }: CustomerFormProps) {
-	const [form, setForm] = useState<Omit<CustomerFormData, "subscription">>({
+	const { data: vegetables = [], isLoading: vegLoading } = useVegetables();
+
+	const [form, setForm] = useState<
+		Omit<CustomerFormData, "subscription" | "plan">
+	>({
 		...emptyCustomer,
 		name: initial?.name ?? "",
 		phone: initial?.phone ?? "",
@@ -45,20 +69,26 @@ export default function CustomerForm({
 		address: initial?.address ?? "",
 	});
 
-	const [showPlan, setShowPlan] = useState(Boolean(initial?.subscription));
+	const [showSub, setShowSub] = useState(Boolean(initial?.subscription));
 	const [sub, setSub] = useState<SubscriptionFormData>({
 		...emptySub,
 		...initial?.subscription,
+	});
+
+	const [showPlan, setShowPlan] = useState(Boolean(initial?.plan));
+	const [plan, setPlan] = useState<PlanFormData>({
+		...emptyPlan,
+		...initial?.plan,
 	});
 
 	const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
 
 	const isEdit = Boolean(initial?.id);
 
+	/* -- Validation ------------------------------------------------ */
 	function validate(): boolean {
 		const e: Record<string, string> = {};
 
-		// Customer validation
 		if (!form.name.trim()) e.name = "Name is required";
 		if (!form.phone.trim()) e.phone = "Phone is required";
 		else if (!/^\d{10,}$/.test(form.phone.replace(/\s/g, "")))
@@ -67,8 +97,7 @@ export default function CustomerForm({
 			e.email = "Enter a valid email";
 		if (!form.address.trim()) e.address = "Address is required";
 
-		// Subscription validation (only if enabled)
-		if (showPlan) {
+		if (showSub) {
 			if (!sub.type) e["sub.type"] = "Select a plan type";
 			if (!sub.package) e["sub.package"] = "Select a package";
 			if (sub.actualPrice === "" || sub.actualPrice <= 0)
@@ -76,29 +105,43 @@ export default function CustomerForm({
 			if (!sub.startDate) e["sub.startDate"] = "Select a start date";
 		}
 
+		if (showPlan) {
+			if (plan.totalQty === "" || Number(plan.totalQty) <= 0)
+				e["plan.totalQty"] = "Enter total quantity (kg)";
+
+			plan.limits.forEach((l, i) => {
+				if (!l.vegetableId) e[`limit.${i}.veg`] = "Select a vegetable";
+				if (
+					(l.maxQtyKg === "" || l.maxQtyKg === undefined) &&
+					(l.maxQtyPiece === "" || l.maxQtyPiece === undefined)
+				)
+					e[`limit.${i}.qty`] = "Enter a limit";
+			});
+		}
+
 		setErrors(e);
 		return Object.keys(e).length === 0;
 	}
 
+	/* -- Submit ---------------------------------------------------- */
 	function handleSubmit(ev: FormEvent) {
 		ev.preventDefault();
 		if (!validate()) return;
 
 		const payload: CustomerFormData = {
 			...form,
+			...(showSub
+				? { subscription: { ...sub, type: sub.type as "STF" | "KG" } }
+				: {}),
 			...(showPlan
-				? {
-						subscription: {
-							...sub,
-							type: sub.type as "STF" | "KG",
-						},
-					}
+				? { plan: { ...plan, totalQty: Number(plan.totalQty) } }
 				: {}),
 		};
 
 		onSubmit(payload, initial?.id);
 	}
 
+	/* -- Helpers --------------------------------------------------- */
 	function set(field: keyof typeof form, value: string) {
 		setForm((prev) => ({ ...prev, [field]: value }));
 		setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -106,7 +149,6 @@ export default function CustomerForm({
 
 	function handleSubChange(updated: SubscriptionFormData) {
 		setSub(updated);
-		// Clear related errors
 		setErrors((prev) => {
 			const next = { ...prev };
 			delete next["sub.type"];
@@ -116,6 +158,31 @@ export default function CustomerForm({
 			return next;
 		});
 	}
+
+	function updateLimit(index: number, updated: VegetableLimitInput) {
+		setPlan((prev) => ({
+			...prev,
+			limits: prev.limits.map((l, i) => (i === index ? updated : l)),
+		}));
+	}
+
+	function removeLimit(index: number) {
+		setPlan((prev) => ({
+			...prev,
+			limits: prev.limits.filter((_, i) => i !== index),
+		}));
+	}
+
+	function addLimit() {
+		setPlan((prev) => ({
+			...prev,
+			limits: [...prev.limits, { ...emptyLimit }],
+		}));
+	}
+
+	const usedVegIds = plan.limits
+		.map((l) => l.vegetableId)
+		.filter((id): id is number => !!id);
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-6">
@@ -183,7 +250,41 @@ export default function CustomerForm({
 				</div>
 			</fieldset>
 
-			{/* -- Section: Plan Details (toggle) --------------------- */}
+			{/* -- Section: Subscription (toggle) --------------------- */}
+			<div className="border-t border-gray-100 pt-4">
+				<label className="flex cursor-pointer items-center gap-3">
+					<div className="relative">
+						<input
+							type="checkbox"
+							className="peer sr-only"
+							checked={showSub}
+							onChange={(e) => setShowSub(e.target.checked)}
+						/>
+						<div className="h-5 w-9 rounded-full bg-gray-300 transition peer-checked:bg-green-600" />
+						<div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-4" />
+					</div>
+					<span className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+						{showSub ? "Subscription Details" : "Add Subscription (optional)"}
+					</span>
+				</label>
+
+				{showSub && (
+					<div className="mt-4">
+						<SubscriptionForm
+							data={sub}
+							onChange={handleSubChange}
+							errors={{
+								type: errors["sub.type"],
+								package: errors["sub.package"],
+								actualPrice: errors["sub.actualPrice"],
+								startDate: errors["sub.startDate"],
+							}}
+						/>
+					</div>
+				)}
+			</div>
+
+			{/* -- Section: Plan & Vegetable Limits (toggle) ---------- */}
 			<div className="border-t border-gray-100 pt-4">
 				<label className="flex cursor-pointer items-center gap-3">
 					<div className="relative">
@@ -197,22 +298,84 @@ export default function CustomerForm({
 						<div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-4" />
 					</div>
 					<span className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-						{showPlan ? "Plan Details" : "Add Plan (optional)"}
+						{showPlan ? "Plan & Limits" : "Add Plan & Limits (optional)"}
 					</span>
 				</label>
 
 				{showPlan && (
-					<div className="mt-4">
-						<SubscriptionForm
-							data={sub}
-							onChange={handleSubChange}
-							errors={{
-								type: errors["sub.type"],
-								package: errors["sub.package"],
-								actualPrice: errors["sub.actualPrice"],
-								startDate: errors["sub.startDate"],
-							}}
-						/>
+					<div className="mt-4 space-y-5">
+						{/* Total Qty */}
+						<div className="max-w-xs">
+							<Input
+								label="Total Quantity (kg) *"
+								id="plan-totalQty"
+								type="number"
+								min={1}
+								step={1}
+								value={plan.totalQty}
+								onChange={(e) =>
+									setPlan((prev) => ({
+										...prev,
+										totalQty:
+											e.target.value === "" ? "" : Number(e.target.value),
+									}))
+								}
+								placeholder="e.g. 72"
+							/>
+							{errors["plan.totalQty"] && (
+								<p className="mt-1 text-xs text-red-600">
+									{errors["plan.totalQty"]}
+								</p>
+							)}
+						</div>
+
+						{/* Per-vegetable limits */}
+						<div className="space-y-3">
+							<div className="flex items-center justify-between">
+								<p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+									Per-Vegetable Limits (optional)
+								</p>
+								<button
+									type="button"
+									onClick={addLimit}
+									className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition"
+								>
+									+ Add Limit
+								</button>
+							</div>
+
+							{plan.limits.length === 0 && (
+								<p className="text-xs text-gray-400">
+									No per-vegetable limits — all vegetables unrestricted.
+								</p>
+							)}
+
+							{plan.limits.map((limit, i) => (
+								<div key={i}>
+									<VegetableLimitRow
+										row={limit}
+										index={i}
+										vegetables={vegetables}
+										excludeIds={usedVegIds.filter(
+											(id) => id !== limit.vegetableId,
+										)}
+										isLoading={vegLoading}
+										onChange={updateLimit}
+										onRemove={removeLimit}
+									/>
+									{errors[`limit.${i}.veg`] && (
+										<p className="mt-1 text-xs text-red-600">
+											{errors[`limit.${i}.veg`]}
+										</p>
+									)}
+									{errors[`limit.${i}.qty`] && (
+										<p className="mt-1 text-xs text-red-600">
+											{errors[`limit.${i}.qty`]}
+										</p>
+									)}
+								</div>
+							))}
+						</div>
 					</div>
 				)}
 			</div>

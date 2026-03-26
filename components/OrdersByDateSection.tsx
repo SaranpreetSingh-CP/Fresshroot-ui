@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Card, { CardHeader, CardTitle } from "@/components/Card";
-import DataTable from "@/components/DataTable";
-import type { Column } from "@/components/DataTable";
 import Badge from "@/components/Badge";
 import { useOrdersByDate } from "@/hooks/useAdminMutations";
 import type { OrderByDateItem } from "@/utils/types";
@@ -12,6 +10,12 @@ import type { OrderByDateItem } from "@/utils/types";
 
 function todayISO(): string {
 	return new Date().toISOString().slice(0, 10);
+}
+
+function yesterdayISO(): string {
+	const d = new Date();
+	d.setDate(d.getDate() - 1);
+	return d.toISOString().slice(0, 10);
 }
 
 function formatDate(raw: string): string {
@@ -28,119 +32,109 @@ function isToday(raw: string): boolean {
 	return raw?.slice(0, 10) === todayISO();
 }
 
-/** Get the effective status - prefer computedStatus over status */
+function isYesterday(raw: string): boolean {
+	return raw?.slice(0, 10) === yesterdayISO();
+}
+
 function effectiveStatus(row: OrderByDateItem): string {
 	return (row.computedStatus ?? row.status ?? "").toLowerCase();
 }
 
-const statusBadge: Record<string, "green" | "amber" | "blue" | "red" | "gray"> =
-	{
-		delivered: "green",
-		"out-for-delivery": "blue",
-		"in-transit": "amber",
-		"not-started": "gray",
-		pending: "amber",
-		confirmed: "blue",
-		processing: "blue",
-		cancelled: "red",
-		missed: "red",
-	};
+const statusConfig: Record<
+	string,
+	{ variant: "green" | "amber" | "blue" | "red" | "gray"; icon: string }
+> = {
+	delivered: { variant: "green", icon: "✔" },
+	"out-for-delivery": { variant: "blue", icon: "🚚" },
+	"in-transit": { variant: "amber", icon: "📦" },
+	"not-started": { variant: "gray", icon: "⏳" },
+	pending: { variant: "amber", icon: "⏳" },
+	confirmed: { variant: "blue", icon: "✓" },
+	processing: { variant: "blue", icon: "⚙" },
+	cancelled: { variant: "red", icon: "✕" },
+	missed: { variant: "red", icon: "✕" },
+};
 
 function formatCurrency(value: number): string {
 	return `₹${value.toLocaleString("en-IN")}`;
 }
 
-/* -- Columns builder ---------------------------------------------- */
+function formatItems(items: OrderByDateItem["items"]): string {
+	if (!items) return "—";
+	if (typeof items === "string") return items || "—";
+	if (!Array.isArray(items) || items.length === 0) return "—";
+	return items
+		.map((item) =>
+			typeof item === "string" ? item : (item as { name: string }).name,
+		)
+		.join(", ");
+}
 
-function buildColumns(
-	onMarkDelivered?: (orderId: string) => void,
-): Column<OrderByDateItem>[] {
-	return [
-		{
-			header: "Order ID",
-			accessorKey: "id",
-			cell: (row) => (
-				<span className="font-mono text-xs font-medium text-gray-900">
-					#{String(row.id).slice(0, 8)}
-				</span>
-			),
-		},
-		{
-			header: "Customer",
-			accessorKey: "customerName",
-			cell: (row) => <span className="text-gray-700">{row.customerName}</span>,
-		},
-		{
-			header: "Items",
-			accessorKey: "items",
-			cell: (row) => (
-				<span className="text-gray-600 text-xs">
-					{Array.isArray(row.items) && row.items.length
-						? row.items
-								.map((item) =>
-									typeof item === "string"
-										? item
-										: (item as { name: string }).name,
-								)
-								.join(", ")
-						: "—"}
-				</span>
-			),
-		},
-		{
-			header: "Total",
-			accessorKey: "total",
-			cell: (row) => (
-				<span className="font-medium text-gray-900">
-					{row.total != null ? formatCurrency(row.total) : "—"}
-				</span>
-			),
-		},
-		{
-			header: "Cost",
-			accessorKey: "cost",
-			cell: (row) => (
-				<span className="text-gray-600">
-					{row.cost != null ? formatCurrency(row.cost) : "NA"}
-				</span>
-			),
-		},
-		{
-			header: "Status",
-			accessorKey: "status",
-			cell: (row) => {
-				const cs = effectiveStatus(row);
-				const isMissed = cs === "missed";
+/** Capitalize first letter, lowercase rest */
+function capitalize(s: string): string {
+	if (!s) return s;
+	return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
 
-				if (isMissed) {
-					return (
-						<div className="flex items-center gap-2">
-							<Badge variant="red" className="ring-1 ring-red-300">
-								Missed
-							</Badge>
-							{onMarkDelivered && (
-								<button
-									onClick={(e) => {
-										e.stopPropagation();
-										onMarkDelivered(row.id);
-									}}
-									className="text-[11px] font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-full px-2 py-0.5 transition whitespace-nowrap"
-									title="Delivery was not marked earlier"
-								>
-									Mark Delivered
-								</button>
-							)}
-						</div>
-					);
-				}
+/* -- Order Row ---------------------------------------------------- */
 
-				const variant = statusBadge[cs] ?? "gray";
-				return (
-					<Badge variant={variant}>{row.computedStatus ?? row.status}</Badge>
-				);
-			},
-		},
-	];
+function OrderRow({
+	order,
+	onMarkDelivered,
+}: {
+	order: OrderByDateItem;
+	onMarkDelivered?: (orderId: string) => void;
+}) {
+	const cs = effectiveStatus(order);
+	const isMissed = cs === "missed";
+	const cfg = statusConfig[cs] ?? { variant: "gray" as const, icon: "•" };
+
+	return (
+		<div
+			className={`group flex items-center justify-between gap-3 rounded-lg px-3 py-3.5 transition-colors hover:bg-gray-50/80 ${
+				isMissed
+					? "border-l-[3px] border-l-red-400 bg-red-50/30"
+					: "border-l-[3px] border-l-transparent"
+			}`}
+		>
+			{/* Left: customer + items */}
+			<div className="min-w-0 flex-1">
+				<p className="truncate text-sm font-medium text-gray-900">
+					{order.customerName}
+				</p>
+				<p className="mt-0.5 truncate text-xs text-gray-400">
+					{formatItems(order.items)}
+				</p>
+			</div>
+
+			{/* Right: total + status + action */}
+			<div className="flex items-center gap-3 shrink-0">
+				{/* Total */}
+				<span className="hidden sm:inline text-sm font-semibold text-gray-800 tabular-nums">
+					{order.total != null ? formatCurrency(order.total) : "—"}
+				</span>
+
+				{/* Status badge with icon */}
+				<Badge variant={cfg.variant}>
+					<span className="mr-0.5">{cfg.icon}</span>{" "}
+					{capitalize(order.computedStatus ?? order.status)}
+				</Badge>
+
+				{/* Mark Delivered — only for missed */}
+				{isMissed && onMarkDelivered && (
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							onMarkDelivered(order.id);
+						}}
+						className="rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[11px] font-medium text-green-700 transition hover:bg-green-100 whitespace-nowrap"
+					>
+						Mark Delivered
+					</button>
+				)}
+			</div>
+		</div>
+	);
 }
 
 /* -- Component ---------------------------------------------------- */
@@ -154,28 +148,58 @@ export default function OrdersByDateSection({
 }: OrdersByDateSectionProps) {
 	const { data, isLoading, isError } = useOrdersByDate();
 	const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+	const [initialized, setInitialized] = useState(false);
 
 	function toggleDate(date: string) {
 		setExpandedDates((prev) => {
 			const next = new Set(prev);
-			if (next.has(date)) {
-				next.delete(date);
-			} else {
-				next.add(date);
-			}
+			if (next.has(date)) next.delete(date);
+			else next.add(date);
 			return next;
 		});
 	}
 
-	// Auto-expand the first date group on initial load
-	if (data?.length && expandedDates.size === 0) {
-		expandedDates.add(data[0].date);
+	// Auto-expand today + yesterday on first load
+	if (data?.length && !initialized) {
+		const seed = new Set<string>();
+		for (const g of data) {
+			if (isToday(g.date) || isYesterday(g.date)) seed.add(g.date);
+		}
+		// If neither today nor yesterday exist, expand the first group
+		if (seed.size === 0 && data.length > 0) seed.add(data[0].date);
+		setExpandedDates(seed);
+		setInitialized(true);
+	}
+
+	const allExpanded = data
+		? data.every((g) => expandedDates.has(g.date))
+		: false;
+
+	function toggleAll() {
+		if (!data) return;
+		setExpandedDates(
+			allExpanded ? new Set() : new Set(data.map((g) => g.date)),
+		);
 	}
 
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>All Deliveries</CardTitle>
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<span className="text-lg">📦</span>
+						<CardTitle>All Deliveries</CardTitle>
+					</div>
+					{data && data.length > 1 && (
+						<button
+							type="button"
+							onClick={toggleAll}
+							className="text-xs font-medium text-green-700 hover:text-green-800 transition"
+						>
+							{allExpanded ? "Collapse All" : "Expand All"}
+						</button>
+					)}
+				</div>
 			</CardHeader>
 
 			{isLoading && (
@@ -191,7 +215,7 @@ export default function OrdersByDateSection({
 			)}
 
 			{!isLoading && !isError && data && (
-				<div className="max-h-[32rem] overflow-y-auto space-y-2">
+				<div className="space-y-3 px-5 pb-5">
 					{data.length === 0 && (
 						<p className="py-6 text-center text-sm text-gray-400">
 							No orders found.
@@ -200,18 +224,26 @@ export default function OrdersByDateSection({
 
 					{data.map((group) => {
 						const isExpanded = expandedDates.has(group.date);
+						const missedCount = group.orders.filter(
+							(o) => effectiveStatus(o) === "missed",
+						).length;
+
 						return (
 							<div
 								key={group.date}
-								className="border border-gray-100 rounded-lg overflow-hidden"
+								className="rounded-xl border border-gray-100 bg-white overflow-hidden"
 							>
+								{/* Date header */}
 								<button
 									type="button"
 									onClick={() => toggleDate(group.date)}
-									className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+									className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50/60 transition-colors"
 								>
-									<span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-										{formatDate(group.date)}
+									<div className="flex items-center gap-2 min-w-0">
+										<span className="text-sm font-semibold text-gray-800">
+											{formatDate(group.date)}
+										</span>
+
 										{isToday(group.date) && (
 											<Badge
 												variant="green"
@@ -220,13 +252,27 @@ export default function OrdersByDateSection({
 												Today
 											</Badge>
 										)}
-										<span className="text-xs font-normal text-gray-400">
-											({group.orders.length} order
-											{group.orders.length !== 1 ? "s" : ""})
+
+										{isYesterday(group.date) && (
+											<Badge variant="blue" className="text-[10px] px-1.5 py-0">
+												Yesterday
+											</Badge>
+										)}
+
+										<span className="text-xs text-gray-400">
+											{group.orders.length} delivery
+											{group.orders.length !== 1 ? "ies" : "y"}
 										</span>
-									</span>
+
+										{missedCount > 0 && (
+											<span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+												{missedCount} missed
+											</span>
+										)}
+									</div>
+
 									<svg
-										className={`h-4 w-4 text-gray-500 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+										className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
 										fill="none"
 										viewBox="0 0 24 24"
 										stroke="currentColor"
@@ -240,17 +286,21 @@ export default function OrdersByDateSection({
 									</svg>
 								</button>
 
+								{/* Order list */}
 								{isExpanded && (
-									<div className="px-2 pb-2">
-										<DataTable
-											columns={buildColumns(onMarkDelivered)}
-											data={group.orders}
-											keyExtractor={(o) => o.id}
-											emptyMessage="No orders for this date."
-											rowClassName={(row) =>
-												effectiveStatus(row) === "missed" ? "bg-red-50/50" : ""
-											}
-										/>
+									<div className="border-t border-gray-100 space-y-4 px-4 py-2">
+										{group.orders.length === 0 && (
+											<p className="py-6 text-center text-sm text-gray-400">
+												No orders for this date.
+											</p>
+										)}
+										{group.orders.map((order) => (
+											<OrderRow
+												key={order.id}
+												order={order}
+												onMarkDelivered={onMarkDelivered}
+											/>
+										))}
 									</div>
 								)}
 							</div>
